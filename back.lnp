@@ -1,0 +1,1 @@
+-T ./linkscript.ld -mcpu=arm7tdmi -mthumb-interwork -Wl -o back.elf "start.o" -nostartfiles -lm

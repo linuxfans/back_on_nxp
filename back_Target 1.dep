@@ -1,0 +1,2 @@
+Dependencies for Project 'back', Target 'Target 1': (DO NOT MODIFY !)
+F (.\start.S)(0x5013F5CB)(-mcpu=arm7tdmi --gdwarf-2 -mthumb-interwork --MD start.d -IC:/Keil/ARM/CMSIS/Include/ -IC:/Keil/ARM/INC/Philips/ -o start.o)
