@@ -55,7 +55,7 @@ SECTIONS
 
   /* .rodata section which is used for read-only data (constants) */
 
-  .rodata 0x00007000:
+  .rodata :
   {
     *(.rodata)
   } >CODE

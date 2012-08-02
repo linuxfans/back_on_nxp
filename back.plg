@@ -3,7 +3,45 @@
 <pre>
 <h1>µVision Build Log</h1>
 <h2>Project:</h2>
-C:\Users\zhx\Desktop\back\back.uvproj
+C:\Users\zhx\Desktop\back_on_nxp\back.uvproj
 Project File Date:  07/28/2012
 
 <h2>Output:</h2>
+Build target 'Target 1'
+assembling start.S...
+start.S: Assembler messages:
+start.S(141): error: invalid literal constant: pool needs to be closer
+start.S(149): error: invalid literal constant: pool needs to be closer
+start.S(209): error: invalid literal constant: pool needs to be closer
+start.S(213): error: invalid literal constant: pool needs to be closer
+start.S(215): error: invalid literal constant: pool needs to be closer
+start.S(218): error: invalid literal constant: pool needs to be closer
+start.S(226): error: invalid literal constant: pool needs to be closer
+start.S(235): error: invalid literal constant: pool needs to be closer
+start.S(236): error: invalid literal constant: pool needs to be closer
+start.S(237): error: invalid literal constant: pool needs to be closer
+start.S(238): error: invalid literal constant: pool needs to be closer
+start.S(239): error: invalid literal constant: pool needs to be closer
+start.S(244): error: invalid literal constant: pool needs to be closer
+start.S(246): error: invalid literal constant: pool needs to be closer
+start.S(252): error: invalid literal constant: pool needs to be closer
+start.S(271): error: invalid literal constant: pool needs to be closer
+start.S(278): error: invalid literal constant: pool needs to be closer
+start.S(297): error: invalid literal constant: pool needs to be closer
+start.S(373): error: invalid literal constant: pool needs to be closer
+start.S(395): error: invalid literal constant: pool needs to be closer
+start.S(412): error: invalid literal constant: pool needs to be closer
+start.S(451): error: invalid literal constant: pool needs to be closer
+Target not created
+Build target 'Target 1'
+assembling start.S...
+linking...
+"back.elf" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+assembling start.S...
+linking...
+"back.elf" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+assembling start.S...
+linking...
+"back.elf" - 0 Error(s), 0 Warning(s).

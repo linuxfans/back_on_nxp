@@ -11,10 +11,15 @@ _start:
 	b	_reset
 	
 	.text
+FORTH_FILE:
+	.incbin "test.fs"	
+	.word	0x0
+	.align 4
+	.text
 	.set link,0
 	
 	.macro defcode name, namelen, flags=0, label
-	.section .text
+	.section .rodata	
 	.align 4
 	.globl name_\label
 name_\label :
@@ -28,7 +33,7 @@ code_\label :
 	.endm
 
 	.macro defword name, namelen, flags=0, label
-	.section .text
+	.section .rodata	
 	.align 4
 	.globl name_\label
 name_\label :
@@ -483,14 +488,6 @@ TRUE_END_LOOP:
 	b	TRUE_END_LOOP
 _code_end:	
 
-	.section .rodata
-_rodata_start:	
-	.word name_OVER
-	. = _rodata_start + 4096
-FORTH_FILE:
-	.incbin "test.fs"	
-	.word	0x0
-	.align 4
 
 	.data			
 	.set RETURN_STACK_SIZE,128
