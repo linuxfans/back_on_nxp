@@ -49,7 +49,7 @@ SECTIONS
 
     *(.glue_7t) *(.glue_7)
 
-  } >CODE =0
+  } >CODE 
 
   . = ALIGN(4);
 
@@ -58,7 +58,7 @@ SECTIONS
   .rodata 0x00007000:
   {
     *(.rodata)
-  } >CODE
+  } >CODE 
 
   . = ALIGN(4);
 

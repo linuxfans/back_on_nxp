@@ -1,7 +1,7 @@
 @filename: start.S
 	.text
 	.align 4
-	.global _start
+	.global _start		
 	
 	top	.req	r11
 	rsp	.req	sp
@@ -83,50 +83,76 @@ _reset:
 	bic	r0,r0,#0x1f
 	orr	r0,r0,#0xd3
 	msr	cpsr,r0
-	
-	ldr	sp, =return_stack_top
-	ldr	r12,=parameter_stack_top
-	
+
+	@@ Init RSP & PSP
+	ldr	rsp, =return_stack_top
+	ldr	psp,=parameter_stack_top
+
+	@@ Init latest
 	ldr	r0, =var_LATEST
 	ldr	r1, =name_OVER
 	str	r1, [r0]
 
-	@@ Copy the kernel code from rom to ram
-	ldr	r1, =_ram_start
-	ldr	r2, =_code_end + 100
-	ldr	r3, =dictionary
-	sub	r4, r3, r1
-_loop_rel:
-	cmp	r1, r2
-	ldrlo	r0, [r1], #4
-	strlo	r0, [r3], #4
-	blo	_loop_rel
-	
-	ldr	pc, =dictionary
-_ram_start:
-	@@ HERE is in r3										
-	ldr	r1, =var_HERE
-	str	r3, [r1]
-
-	@@ LATEST = LATEST + offset (RAM - ROM)
-	ldr	r0, =var_LATEST
-	ldr	r5, =var_S0
-	str	r4, [r5]
-1:	
-	ldr	r1, [r0]
-	cmp	r1, #0
-	beq	2f
-	add	r1, r1, r4
+	@@ Init here
+	ldr	r0, =var_HERE
+	mov	r1, #0x00001000
 	str	r1, [r0]
-	ldr	r0, [r0]
-	b	1b
-2:		
+	
+	@@ Init blk_here
+	ldr	r0, =var_BLK_HERE
+	mov	r1, #0x00001000
+	str	r1, [r0]
+	
+	@@ Init there
+	ldr	r0, =var_THERE
+	mov	r1, #0x40000000
+	mov	r2, #0x00001800
+	add	r1, r1, r2
+	str	r1, [r0]
+	
+	@@ Init blk_there
+	ldr	r0, =var_BLK_THERE
+	mov	r1, #0x40000000
+	mov	r2, #0x00001800
+	add	r1, r1, r2
+	str	r1, [r0]
+
+	@@ Init tib
 	ldr	r0, =FORTH_FILE
 	ldr	r1, =var_TIB
 	str	r0, [r1]
 
+	@@ Erase 4kB~28kB
+
+	ldr	r0, =iap_para
+	mov	r2, #50
+	str	r2, [r0], #4
+	mov	r2, #1
+	str	r2, [r0], #4
+	mov	r2, #6
+	str	r2, [r0], #4
+	ldr	r0, =iap_para
+	ldr	r1, =iap_result
 	
+	mov	r2, #0x7ffffff1
+	mov	lr, pc
+	bx	r2
+
+	ldr	r0, =iap_para
+	mov	r2, #52
+	str	r2, [r0], #4
+	mov	r2, #1
+	str	r2, [r0], #4
+	mov	r2, #6
+	str	r2, [r0], #4
+	mov	r2, #0x12000
+	str	r2, [r0], #4
+	ldr	r0, =iap_para
+	ldr	r1, =iap_result
 	
+	mov	r2, #0x7ffffff1
+	mov	lr, pc
+	bx	r2
 MAIN_LOOP:
 	bl	code_INTERPRET
 	b	MAIN_LOOP
@@ -146,6 +172,15 @@ MAIN_LOOP:
 	and	r0, r0, #F_LENMASK
 	add	r0, r0, top	@ r0+4(link filed)+4(flag_len+3)-8(bl offset)
 	and	r0, r0, #~3     @ r0: CFA of the word is being compiled
+	cmp	r0, #0x40000000
+	blt	10f
+	ldr	r2, =var_BLK_THERE
+	ldr	r2, [r2]
+	ldr	r3, =var_BLK_HERE
+	ldr	r3, [r3]
+	sub	r2, r2, r3	@ r2 = BLK_THERE - BLK_HERE
+	sub	r0, r0, r2
+10:	
 	ldr	r1, =var_HERE
 	ldr	r1, [r1]	@ r1: HERE
 	sub	r2, r0, r1	@ r2: offset
@@ -204,6 +239,7 @@ MAIN_LOOP:
 	add	r2, r2, r1
 	b	3b
 
+	
 over:
 	mov	top, r2
 	ldr	r3, =var_STATE
@@ -212,14 +248,12 @@ over:
 	bne	6f		@ Immediat mode
 	ldr	r3, =code_LIT
 	sub	r3, r3, #8
-	ldr	r4, =var_S0	@ Add the RAM - ROM offset
-	ldr	r4, [r4]
-	add	r3, r3, r4
 	ldr	r1, =var_HERE
 	ldr	r1, [r1]	@ r1: HERE
 	sub	r2, r3, r1	@ r2: offset
 	mov	r2, r2, LSR #2
 	and	r2, r2, #0x00FFFFFF
+	POP	r5
 	PUSH	top
 	add	top, r2, #0xEB000000
 	bl	code_COMMA
@@ -229,42 +263,58 @@ over:
 6:
 	bl	code_EXIT	
 nothex:
-error:	
+error:
+	ldr	r0, =var_S0
+	mov	r1, #0x55
+	str	r1, [r0]
 	b	END_LOOP
 
 	defvar "STATE",5,,STATE
 	defvar "HERE",4,,HERE
+	defvar "BLK_HERE",8,,BLK_HERE	
+	defvar "THERE",5,,THERE
+	defvar "BLK_THERE",9,,BLK_THERE	
 	defvar "LATEST",6,,LATEST, name_OVER
 	defvar "S0",2,,SZ
 	defvar "TIB",3,,TIB
+
 
 	@@ Create New Word
 	defcode "CREATE",6,,CREATE
 _CREATE:
 	ldr	r0, =var_HERE
 	ldr	r0, [r0]	@ r0 = HERE
-	ldr	r1, =var_LATEST	@ r1 = &LATEST
-	ldr	r2, [r1]	@ r2 = LATEST
-	str	r0, [r1]	@ Update LATEST	
-	str	r2, [r0]	@ Save link
-	
-	add	r1, r0, #4	@ Move HERE
-	ldr	r0, =var_HERE
-	
-	strb	top, [r1]	@ Store length & flags
-	add	r1, r1, #1
-	add	top, r1, top	@
-	POP	r3		@ address of name
+	ldr	r1, =var_THERE
+	ldr	r1, [r1]	@ r1 = THERE
+	ldr	r2, =var_LATEST	@ r2 = &LATEST
+	ldr	r3, [r2]	@ r3 = LATEST
+	str	r0, [r2]	@ LATEST = HERE
+	str	r3, [r1]	@ *THERE = LINK
+
+	add	r0, r0, #4	@ Move HERE
+	add	r1, r1, #4	@ Move THERE
+
+	strb	top, [r1]	@ Store len & flg
+	add	r0, r0, #1
+	add	r1, r1, #1	@ Move HERE and THERE
+	add	top, r0, top	@
+	POP	r2
+
 1:
-	ldrb	r2, [r3], #1
-	strb	r2, [r1], #1
-	cmp	top, r1
+	ldrb	r3, [r2], #1
+	strb	r3, [r1], #1
+	add	r0, r0, #1
+	cmp	top, r0
 	bne	1b
-	add	r1, r1, #3	@ Align HERE to 4byte boundary
+	add	r0, r0, #3	@ Move HERE and THERE to 4B boundary
+	and	r0, r0, #~3
+	add	r1, r1, #3
 	and	r1, r1, #~3
-	str	r1, [r0]	@ Update HERE
-	POP	top
-	NEXT
+	ldr	r2, =var_HERE	@ Save HERE and THERE
+	str	r0, [r2]
+	ldr	r2, =var_THERE
+	str	r1, [r2]
+	
 
 	@@ Enter interpret mode
 	defcode "[",1,F_IMMED,LBRAC
@@ -296,10 +346,19 @@ _CREATE:
 	defcode ",",1,,COMMA
 	ldr	r0, =var_HERE
 	ldr	r1, [r0]
-	str	top, [r1]
 	add	r1, r1, #4
+	ldr	r2, =var_THERE
+	ldr	r3, [r2]
+	str	top, [r3]
+	add	r3, r3, #4
+	mov	r4, #0x40000000
+	mov	r5, #THERE_BUF_END
+	add	r4, r4, r5
+	cmp	r3, r4
+	subge	r3, #THERE_BUF_SIZE
 	POP	top
-	str	r1, [r0]
+	str	r1, [r0]	@ Update HERE
+	str	r3, [r2]	@ Update THERE
 	NEXT
 	
 	@@ 
@@ -345,6 +404,68 @@ _CREATE:
 	
 	
 	@@
+	defword "END",3,F_IMMED,END
+1:
+	ldr	r0, =var_THERE	
+	ldr	r0, [r0]	@ r0 = THERE
+	ldr	r1, =var_BLK_THERE
+	ldr	r1, [r1]	@ r1 = BLK_THERE
+	add	r0, r0, #THERE_BUF_SIZE
+	sub	r2, r0, r1	@ r2 = THERE - BLK_THERE + SIZE
+	cmp	r2, #THERE_BUF_SIZE
+	subge	r2, r2, #THERE_BUF_SIZE
+	@@ Prepare the flash
+	mov	r3, r1, LSR #12	@ BLK_THERE / 4k
+	and	r3, r3, #0xFF
+	ldr	r0, =iap_para
+	mov	r2, #50
+	str	r2, [r0], #4
+	mov	r2, r3
+	str	r2, [r0], #4
+	mov	r2, r3
+	str	r2, [r0], #4
+	ldr	r0, =iap_para
+	ldr	r1, =iap_result
+	mov	r2, #0x7ffffff1
+	mov	lr, pc
+	bx	r2
+	@@ Write the flash
+	ldr	r0, =iap_para
+	mov	r2, #51
+	str	r2, [r0], #4
+	ldr	r2, =var_BLK_HERE	
+	ldr	r2, [r2]	@ r0 = BLK_HERE
+	str	r2, [r0], #4
+	ldr	r2, =var_BLK_THERE	
+	ldr	r2, [r2]	@ r0 = BLK_THERE
+	str	r2, [r0], #4
+	mov	r2, #BLK_SIZE
+	str	r2, [r0], #4
+	mov	r2, #0x12000
+	str	r2, [r0], #4
+	ldr	r0, =iap_para
+	ldr	r1, =iap_result
+	mov	r2, #0x7ffffff1
+	mov	lr, pc
+	bx	r2
+	@@ Update BLK_HERE and BLK_THERE
+	ldr	r0, =var_BLK_HERE
+	ldr	r1, [r0]
+	add	r1, r1, #BLK_SIZE
+	str	r1, [r0]
+	ldr	r0, =var_BLK_THERE
+	ldr	r1, [r0]
+	add	r1, r1, #BLK_SIZE
+	mov	r4, #0x40000000
+	mov	r5, #THERE_BUF_END
+	add	r4, r4, r5
+	cmp	r1, r4
+	subge	r1, #THERE_BUF_SIZE
+	str	r1, [r0]
+2:	
+	bl	code_EXIT
+
+	@@
 	defword ";",1,F_IMMED,SEMICOLON
 	bl	code_LIT
 	POPRSP 	lr	
@@ -353,6 +474,66 @@ _CREATE:
 	NEXT
 	bl	code_COMMA
 	bl	code_LBRAC
+1:
+	ldr	r0, =var_THERE	
+	ldr	r0, [r0]	@ r0 = THERE
+	ldr	r1, =var_BLK_THERE
+	ldr	r1, [r1]	@ r1 = BLK_THERE
+	add	r0, r0, #THERE_BUF_SIZE
+	sub	r2, r0, r1	@ r2 = THERE - BLK_THERE + SIZE
+	cmp	r2, #THERE_BUF_SIZE
+	subge	r2, r2, #THERE_BUF_SIZE
+	cmp	r2, #BLK_SIZE
+	ble	2f
+	@@ Prepare the flash
+	mov	r3, r1, LSR #12	@ BLK_THERE / 4k
+	and	r3, r3, #0xFF
+	ldr	r0, =iap_para
+	mov	r2, #50
+	str	r2, [r0], #4
+	mov	r2, r3
+	str	r2, [r0], #4
+	mov	r2, r3
+	str	r2, [r0], #4
+	ldr	r0, =iap_para
+	ldr	r1, =iap_result
+	mov	r2, #0x7ffffff1
+	mov	lr, pc
+	bx	r2
+	@@ Write the flash
+	ldr	r0, =iap_para
+	mov	r2, #51
+	str	r2, [r0], #4
+	ldr	r2, =var_BLK_HERE	
+	ldr	r2, [r2]	@ r0 = BLK_HERE
+	str	r2, [r0], #4
+	ldr	r2, =var_BLK_THERE	
+	ldr	r2, [r2]	@ r0 = BLK_THERE
+	str	r2, [r0], #4
+	mov	r2, #BLK_SIZE
+	str	r2, [r0], #4
+	mov	r2, #0x12000
+	str	r2, [r0], #4
+	ldr	r0, =iap_para
+	ldr	r1, =iap_result
+	mov	r2, #0x7ffffff1
+	mov	lr, pc
+	bx	r2
+	@@ Update BLK_HERE and BLK_THERE
+	ldr	r0, =var_BLK_HERE
+	ldr	r1, [r0]
+	add	r1, r1, #BLK_SIZE
+	str	r1, [r0]
+	ldr	r0, =var_BLK_THERE
+	ldr	r1, [r0]
+	add	r1, r1, #BLK_SIZE
+	mov	r4, #0x40000000
+	mov	r5, #THERE_BUF_END
+	add	r4, r4, r5
+	cmp	r1, r4
+	subge	r1, #THERE_BUF_SIZE
+	str	r1, [r0]
+2:	
 	bl	code_EXIT
 
 	@@ 
@@ -375,7 +556,10 @@ _WORD:
 1:
 	ldrb	r1, [r0], #1
 	cmp	r1, #0
-	beq	END_LOOP
+	ldreq	r5, =var_S0
+	moveq	r6, #0xAA
+	streq	r6, [r5]
+	beq	END_LOOP	
 	cmp	r1, $'\\'
 	beq	3f
 	cmp	r1, $' '
@@ -388,6 +572,9 @@ _WORD:
 	add	top, top, #1
 	ldrb	r1, [r0], #1
 	cmp	r1, #0
+	ldreq	r5, =var_S0
+	moveq	r6, #0xFF
+	streq	r6, [r5]
 	beq	END_LOOP	
 	cmp	r1, $' '	
 	bhi	2b
@@ -405,37 +592,53 @@ _WORD:
 	.set F_HIDDEN,0x20
 	.set F_LENMASK,0x1f
 
+	.set THERE_BUF_SIZE, 1024
+	.set THERE_BUF_END, 0x1C00
+	.set BLK_SIZE, 512
+
 	defword "FIND", 4, , FIND
 	bl	_FIND
 	bl	code_EXIT
 _FIND:
 	ldr	r0, =var_LATEST
+	
 1:
-	ldr	r0, [r0]
-	cmp	r0, #0
-	beq	3f
-	ldrb	r1, [r0, #4]
-	and	r1, r1, #F_LENMASK
-	cmp	r1, top
+	ldr	r1, [r0]	@ r0 = link
+	cmp	r1, #0		@ r1 = *link
+	beq	4f
+	cmp	r1, #0xffffffff	@ There's no link, should be in RAM
+	bne	2f
+	ldr	r2, =var_BLK_THERE
+	ldr	r2, [r2]
+	ldr	r3, =var_BLK_HERE
+	ldr	r3, [r3]
+	sub	r2, r2, r3	@ r2 = BLK_THERE - BLK_HERE
+	add	r0, r0, r2	@ link = THERE
+	mov	r1, r0
+2:	
+	ldrb	r3, [r1, #4]
+	and	r3, r3, #F_LENMASK
+	cmp	r3, top
+	mov	r0, r1
 	bne	1b
-2:
-	sub	r1, r1, #1
-	add	r3, r1, #5
-	ldrb	r2, [r0, r3]
-	ldr	r3, [psp]
-	ldrb	r3, [r3, r1]
-	cmp	r2, r3
+3:
+	sub	r3, r3, #1
+	add	r4, r3, #5
+	ldrb	r2, [r1, r4]
+	ldr	r5, [psp]
+	ldrb	r4, [r5, r3]
+	cmp	r2, r4
+
 	bne	1b		@ Different character, move to next word in dict
-	cmp	r1, #0
-	bne	2b		@ Continue to compare
+	cmp	r3, #0
+	bne	3b		@ Continue to compare
 	POP	top
 	mov	top, r0
 	NEXT
-3:
-@	POP	top		@ Cannot find, pop addr and len, push 0
+4:
 	mov	top, #0
 	NEXT
-
+	
 	defcode ">CFA", 4,, TCFA
 	bl 	_TCFA
 	bl	code_EXIT
@@ -470,17 +673,35 @@ _TCFA:
 	defcode "DUP",3,,DUP
 	PUSH	top
 	NEXT
-
-
+	
+	defword "CONST",5,F_IMMED,CONST
+	bl	_WORD
+	bl	_CREATE
+	bl	code_LIT
+	DOCOL
+	bl	code_COMMA
+	bl	code_LIT
+	bl	code_LIT
+	bl	code_COMMA
+	bl	code_COMMA
+	bl	code_LIT
+	POPRSP 	lr	
+	bl	code_COMMA
+	bl	code_LIT
+	NEXT
+	bl	code_COMMA
+	bl	code_EXIT
+	
 	defcode "OVER",4,,OVER
 	ldr	r0, [psp]
 	PUSH	top
 	mov	top, r0
+	NEXT
 	
 	
 END_LOOP:
 TRUE_END_LOOP:	
-	b	TRUE_END_LOOP
+		b	TRUE_END_LOOP
 _code_end:	
 
 	.section .rodata
@@ -506,6 +727,11 @@ return_stack_top:
 parameter_stack:
 	.space PARAMETER_STACK_SIZE
 parameter_stack_top:
+	.align 4
+iap_para:
+	.space 20
+iap_result:
+	.space 40	
 	.space	DICTIONARY_SIZE
 dictionary:
 	
