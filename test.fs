@@ -1,6 +1,7 @@
-[ 0x13 ] CONST ten
+0x13 CONST ten
+END
 : init-uart
-    ten 0x40000080 !    
+    ten ten !    
 ;
 : init-uart1
     init-uart

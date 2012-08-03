@@ -84,6 +84,11 @@ _reset:
 	orr	r0,r0,#0xd3
 	msr	cpsr,r0
 
+	@@ Init State
+	ldr	r0, =var_STATE
+	mov	r1, #1
+	str	r1, [r0]
+
 	@@ Init RSP & PSP
 	ldr	rsp, =return_stack_top
 	ldr	psp,=parameter_stack_top
@@ -238,8 +243,6 @@ MAIN_LOOP:
 	sub	r1, r1, $'W'	@ 'a'-10 = 97-10 = 87 = 'W'
 	add	r2, r2, r1
 	b	3b
-
-	
 over:
 	mov	top, r2
 	ldr	r3, =var_STATE
@@ -257,8 +260,6 @@ over:
 	PUSH	top
 	add	top, r2, #0xEB000000
 	bl	code_COMMA
-	ldr	r1, =var_HERE	
-	ldr	r1, [r1]	@ r1: HERE
 	bl	code_COMMA
 6:
 	bl	code_EXIT	
@@ -314,6 +315,8 @@ _CREATE:
 	str	r0, [r2]
 	ldr	r2, =var_THERE
 	str	r1, [r2]
+	POP	top
+	NEXT
 	
 
 	@@ Enter interpret mode
@@ -453,6 +456,8 @@ _CREATE:
 	ldr	r1, [r0]
 	add	r1, r1, #BLK_SIZE
 	str	r1, [r0]
+	ldr	r0, =var_HERE
+	str	r1, [r0]	
 	ldr	r0, =var_BLK_THERE
 	ldr	r1, [r0]
 	add	r1, r1, #BLK_SIZE
@@ -462,6 +467,8 @@ _CREATE:
 	cmp	r1, r4
 	subge	r1, #THERE_BUF_SIZE
 	str	r1, [r0]
+	ldr	r0, =var_THERE
+	str	r1, [r0]	
 2:	
 	bl	code_EXIT
 
@@ -652,11 +659,25 @@ _TCFA:
 
 	defcode "IMMEDIATE",9,F_IMMED,IMMEDIATE
 	ldr	r0, =var_LATEST
+	ldr	r1, [r0]	@ r0 = link
+	ldr	r1, [r1]
+	cmp	r1, #0xffffffff	@ There's no link, should be in RAM
+	bne	1f
+	ldr	r2, =var_BLK_THERE
+	ldr	r2, [r2]
+	ldr	r3, =var_BLK_HERE
+	ldr	r3, [r3]
+	sub	r2, r2, r3	@ r2 = BLK_THERE - BLK_HERE
+	ldr	r1, [r0]	@ r0 = link	
+	add	r0, r1, r2	@ link = THERE
+	b	2f
+1:
 	ldr	r0, [r0]
+2:	
 	add	r0, r0, #4
-	ldr	r1, [r0]
+	ldrb	r1, [r0]
 	orr	r1, r1, #F_IMMED
-	str	r1, [r0]
+	strb	r1, [r0]
 	NEXT
 	
 
@@ -677,18 +698,37 @@ _TCFA:
 	defword "CONST",5,F_IMMED,CONST
 	bl	_WORD
 	bl	_CREATE
+	bl	code_IMMEDIATE
 	bl	code_LIT
-	DOCOL
+	ldr	r3, =code_LIT
 	bl	code_COMMA
-	bl	code_LIT
-	bl	code_LIT
+	bl	code_LIT	
+	sub	r3, r3, #8
 	bl	code_COMMA
+	bl	code_LIT	
+	ldr	r1, =var_HERE
 	bl	code_COMMA
-	bl	code_LIT
-	POPRSP 	lr	
+	bl	code_LIT	
+	ldr	r1, [r1]	@ r1: HERE
 	bl	code_COMMA
-	bl	code_LIT
-	NEXT
+	bl	code_LIT	
+	sub	r2, r3, r1	@ r2: offset
+	bl	code_COMMA
+	bl	code_LIT	
+	mov	r2, r2, LSR #2
+	bl	code_COMMA
+	bl	code_LIT	
+	and	r2, r2, #0x00FFFFFF
+	bl	code_COMMA
+	bl	code_LIT	
+	POP	r5
+	bl	code_COMMA
+	bl	code_LIT	
+	PUSH	top
+	bl	code_COMMA
+	bl	code_LIT	
+	add	top, r2, #0xEB000000
+	bl	code_COMMA
 	bl	code_COMMA
 	bl	code_EXIT
 	
