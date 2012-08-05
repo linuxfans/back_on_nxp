@@ -127,6 +127,11 @@ _reset:
 	ldr	r1, =var_TIB
 	str	r0, [r1]
 
+	@@ Init data here
+	ldr	r0, =var_DHERE
+	ldr	r1, =data_here
+	str	r1, [r0]	
+
 	@@ Erase 4kB~28kB
 
 	ldr	r0, =iap_para
@@ -278,6 +283,7 @@ error:
 	defvar "LATEST",6,,LATEST, name_OVER
 	defvar "S0",2,,SZ
 	defvar "TIB",3,,TIB
+	defvar "DHERE", 5,, DHERE
 
 
 	@@ Create New Word
@@ -710,6 +716,28 @@ _TCFA:
 	bl	code_COMMA
 	bl	code_EXIT
 	
+	defword "VARIABLE",8,F_IMMED,VARIABLE
+	bl	_WORD
+	bl	_CREATE
+	bl	code_LIT
+	PUSH	top
+	bl	code_COMMA
+	bl	code_LIT
+	ldr	top, [pc, #0]
+	bl	code_COMMA
+	bl	code_LIT
+	NEXT
+	bl	code_COMMA
+
+	ldr	r0, =var_DHERE
+	PUSH	top	
+	ldr	r1, [r0]
+	mov	top, r1
+	add	r1, r1, #4
+	str	r1, [r0]
+	bl	code_COMMA
+	bl	code_EXIT
+	
 	defcode "OVER",4,,OVER
 	ldr	r0, [psp]
 	PUSH	top
@@ -750,6 +778,5 @@ iap_para:
 	.space 20
 iap_result:
 	.space 40	
-	.space	DICTIONARY_SIZE
-dictionary:
+data_here:
 	
