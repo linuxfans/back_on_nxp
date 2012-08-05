@@ -15,28 +15,28 @@ _start:
 	
 	.macro defcode name, namelen, flags=0, label
 	.section .text
-	.align 4
+	.align 2
 	.globl name_\label
 name_\label :
 	.int link
 	.set link,name_\label
 	.byte \flags+\namelen
 	.ascii "\name"	
-	.align 4	
+	.align 2	
 	.globl code_\label
 code_\label :
 	.endm
 
 	.macro defword name, namelen, flags=0, label
 	.section .text
-	.align 4
+	.align 2
 	.globl name_\label
 name_\label :
 	.int link
 	.set link,name_\label
 	.byte \flags+\namelen
 	.ascii "\name"	
-	.align 4	
+	.align 2	
 	.globl code_\label
 code_\label :
 	DOCOL
@@ -48,7 +48,7 @@ code_\label :
 	ldr	top, =var_\name
 	NEXT
 	.data
-	.align 4
+	.align 2
 var_\name :
 	.word \initial
 	.endm
@@ -699,6 +699,10 @@ _TCFA:
 
 	defcode "DUP",3,,DUP
 	PUSH	top
+	NEXT
+	
+	defcode "0=",2,,ZEQ
+	cmp	top, #0
 	NEXT
 	
 	defword "CONSTANT",8,F_IMMED,CONSTANT

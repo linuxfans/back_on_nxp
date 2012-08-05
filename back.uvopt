@@ -137,53 +137,6 @@
           <Name>-T5F</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint>
-        <Bp>
-          <Number>0</Number>
-          <Type>0</Type>
-          <LineNumber>558</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>2068</Address>
-          <ByteObject>0</ByteObject>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>start.S</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
-          <LineNumber>481</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>1764</Address>
-          <ByteObject>0</ByteObject>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>start.S</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>2</Number>
-          <Type>0</Type>
-          <LineNumber>650</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>2384</Address>
-          <ByteObject>0</ByteObject>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>start.S</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-      </Breakpoint>
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
@@ -256,8 +209,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>718</TopLine>
-      <CurrentLine>722</CurrentLine>
+      <TopLine>726</TopLine>
+      <CurrentLine>754</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\start.S</PathWithFileName>
       <FilenameWithoutPath>start.S</FilenameWithoutPath>
@@ -300,8 +253,8 @@
         <Doc>
           <Name>.\start.S</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>718</TopLine>
-          <CurrentLine>722</CurrentLine>
+          <TopLine>726</TopLine>
+          <CurrentLine>754</CurrentLine>
         </Doc>
         <Doc>
           <Name>C:\Users\zhx\Desktop\back_on_nxp\linkscript.ld</Name>
