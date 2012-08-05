@@ -695,39 +695,17 @@ _TCFA:
 	PUSH	top
 	NEXT
 	
-	defword "CONST",5,F_IMMED,CONST
+	defword "CONSTANT",8,F_IMMED,CONSTANT
 	bl	_WORD
 	bl	_CREATE
-	bl	code_IMMEDIATE
 	bl	code_LIT
-	ldr	r3, =code_LIT
+	PUSH	top;
 	bl	code_COMMA
-	bl	code_LIT	
-	sub	r3, r3, #8
+	bl	code_LIT
+	ldr	top, [pc, #0]
 	bl	code_COMMA
-	bl	code_LIT	
-	ldr	r1, =var_HERE
-	bl	code_COMMA
-	bl	code_LIT	
-	ldr	r1, [r1]	@ r1: HERE
-	bl	code_COMMA
-	bl	code_LIT	
-	sub	r2, r3, r1	@ r2: offset
-	bl	code_COMMA
-	bl	code_LIT	
-	mov	r2, r2, LSR #2
-	bl	code_COMMA
-	bl	code_LIT	
-	and	r2, r2, #0x00FFFFFF
-	bl	code_COMMA
-	bl	code_LIT	
-	POP	r5
-	bl	code_COMMA
-	bl	code_LIT	
-	PUSH	top
-	bl	code_COMMA
-	bl	code_LIT	
-	add	top, r2, #0xEB000000
+	bl	code_LIT
+	NEXT
 	bl	code_COMMA
 	bl	code_COMMA
 	bl	code_EXIT
