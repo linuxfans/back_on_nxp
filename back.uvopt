@@ -25,7 +25,7 @@
     <ToolsetNumber>0x3</ToolsetNumber>
     <ToolsetName>ARM-GNU</ToolsetName>
     <TargetOption>
-      <CLKARM>12000000</CLKARM>
+      <CLKARM>18340000</CLKARM>
       <OPTTT>
         <gFlags>1</gFlags>
         <BeepAtEnd>1</BeepAtEnd>
@@ -141,14 +141,14 @@
         <Mm>
           <WinNumber>1</WinNumber>
           <SubType>0</SubType>
-          <ItemText>0x00001000</ItemText>
+          <ItemText>0x00001024</ItemText>
         </Mm>
       </MemoryWindow1>
       <MemoryWindow2>
         <Mm>
           <WinNumber>2</WinNumber>
           <SubType>0</SubType>
-          <ItemText>0x40000370</ItemText>
+          <ItemText>0x00000934</ItemText>
         </Mm>
       </MemoryWindow2>
       <MemoryWindow3>
@@ -207,10 +207,10 @@
       <FileType>2</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>9</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>726</TopLine>
-      <CurrentLine>754</CurrentLine>
+      <TopLine>603</TopLine>
+      <CurrentLine>613</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\start.S</PathWithFileName>
       <FilenameWithoutPath>start.S</FilenameWithoutPath>
@@ -252,9 +252,9 @@
       <Documents>
         <Doc>
           <Name>.\start.S</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>726</TopLine>
-          <CurrentLine>754</CurrentLine>
+          <ColumnNumber>9</ColumnNumber>
+          <TopLine>603</TopLine>
+          <CurrentLine>613</CurrentLine>
         </Doc>
         <Doc>
           <Name>C:\Users\zhx\Desktop\back_on_nxp\linkscript.ld</Name>

@@ -30,12 +30,7 @@ END
     THERE @
     BEQ ,
 ;
-
-: ELSE IMMEDIATE
-    THERE @
-    BAL ,
-    SWAP
-
+: RESOLVE
     DUP DUP
     THERE @				\ new PC
     SWAP
@@ -49,18 +44,17 @@ END
     SWAP !
 ;
 
+: ELSE IMMEDIATE
+    THERE @
+    BAL ,
+    SWAP
+
+    RESOLVE
+
+;
+
 : THEN IMMEDIATE
-    DUP DUP
-    THERE @				\ new PC
-    SWAP
-    0x8 +    				\ old PC + 8
-    -
-    0x02 LSR				
-    0x00FFFFFF AND
-    SWAP
-    @					\ BEQ or BAL
-    +					\ opcode
-    SWAP !
+    RESOLVE
 ;
 
 END
@@ -77,7 +71,7 @@ END
 ;
 
 : init-uart1
-    0x0
+    0x1
     IF
 	test1
 	test2
@@ -87,4 +81,13 @@ END
     THEN
 ;
 
-END  init-uart1
+: init-uart0
+    init-uart1
+;
+
+: init
+    init-uart1
+;
+
+END
+init-uart1

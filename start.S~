@@ -244,7 +244,7 @@ MAIN_LOOP:
 	and	r0, r0, #F_LENMASK
 	add	r0, r0, #1	
 	add	r0, r0, top
-	add	r0, r0, #7
+	add	r0, r0, #3
 	and	r0, r0, #~3
 	POP	top
 	mov	lr, pc
