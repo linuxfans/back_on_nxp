@@ -7,6 +7,7 @@ VARIABLE myvar2
 0x1F CONSTANT F_LENMASK
 
 0x0A000000 CONSTANT BEQ
+0xEA000000 CONSTANT BAL
 
 
 : >CFA
@@ -26,17 +27,39 @@ END
     
 : IF IMMEDIATE
     LIT [ ' 0= @ , ] ,
-    THERE @ 
+    THERE @
+    BEQ ,
+;
+
+: ELSE IMMEDIATE
+    THERE @
+    BAL ,
+    SWAP
+
+    DUP DUP
+    THERE @				\ new PC
+    SWAP
+    0x8 +    				\ old PC + 8
+    -
+    0x02 LSR				
+    0x00FFFFFF AND
+    SWAP
+    @
+    +
+    SWAP !
 ;
 
 : THEN IMMEDIATE
-    DUP
-    0x8 +    
-    THERE @
+    DUP DUP
+    THERE @				\ new PC
+    SWAP
+    0x8 +    				\ old PC + 8
     -
-    0x02 LSR
+    0x02 LSR				
     0x00FFFFFF AND
-    BEQ +
+    SWAP
+    @					\ BEQ or BAL
+    +					\ opcode
     SWAP !
 ;
 
@@ -50,19 +73,17 @@ END
 : test2
     ten myvar2 !
     myvar2 @ mycon2 !
+    0x10 mycon2 !
 ;
 
 : init-uart1
     0x0
     IF
-	DROP
 	test1
-	
-    THEN
-    0x1
-    IF
-	DROP
 	test2
+	0x10 mycon2 !	
+    ELSE
+	0x20 mycon2 !	
     THEN
 ;
 

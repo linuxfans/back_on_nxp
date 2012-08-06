@@ -261,7 +261,6 @@ over:
 	sub	r2, r3, r1	@ r2: offset
 	mov	r2, r2, LSR #2
 	and	r2, r2, #0x00FFFFFF
-	POP	r5
 	PUSH	top
 	add	top, r2, #0xEB000000
 	bl	code_COMMA
