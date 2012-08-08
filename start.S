@@ -123,7 +123,19 @@ var_\name :
 	ldmfd	psp!, {\reg}
 	.endm
 
-_reset:	
+_reset:
+	@@ set the cpu to IRQ32 mode 
+	mrs	r0,cpsr
+	bic	r0,r0,#0x1f
+	orr	r0,r0,#0xd2
+	msr	cpsr,r0
+
+	mov	r0, #0x40000000
+	mov	r1, #0x1E00
+	add	r0, r1, r0
+	mov	rsp, r0
+	
+	
 	@@ set the cpu to SVC32 mode 
 	mrs	r0,cpsr
 	bic	r0,r0,#0x1f
@@ -155,37 +167,6 @@ PLL_Loop:
 
 
 	
-	@@ Erase 4kB~28kB
-
-	STMFD SP!,{R0-R12, R14}
-	
-	ldr	r0, =iap_para
-	mov	r2, #50
-	str	r2, [r0], #4
-	mov	r2, #1
-	str	r2, [r0], #4
-	mov	r2, #6
-	str	r2, [r0], #4
-	ldr	r0, =iap_para
-	ldr	r1, =iap_result
-	
-	bl	iap
-
-	ldr	r0, =iap_para
-	mov	r2, #52
-	str	r2, [r0], #4
-	mov	r2, #1
-	str	r2, [r0], #4
-	mov	r2, #6
-	str	r2, [r0], #4
-	mov	r2, #0xD800
-	str	r2, [r0], #4
-	ldr	r0, =iap_para
-	ldr	r1, =iap_result
-	
-	bl	iap
-	LDMFD SP!,{R0-R12, R14}
-	
 	@@ Init State
 	ldr	r0, =var_STATE
 	mov	r1, #1
@@ -193,7 +174,7 @@ PLL_Loop:
 
 	@@ Init RSP & PSP
 	ldr	rsp, =return_stack_top
-	ldr	psp,=parameter_stack_top
+	ldr	psp, =parameter_stack_top
 
 	@@ Init latest
 	ldr	r0, =var_LATEST
@@ -232,7 +213,40 @@ PLL_Loop:
 	@@ Init data here
 	ldr	r0, =var_DHERE
 	ldr	r1, =data_here
-	str	r1, [r0]	
+	str	r1, [r0]
+
+	@@ Erase 4kB~28kB
+
+	STMFD SP!,{R0-R12, R14}
+	
+	ldr	r0, =iap_para
+	mov	r2, #50
+	str	r2, [r0], #4
+	mov	r2, #1
+	str	r2, [r0], #4
+	mov	r2, #6
+	str	r2, [r0], #4
+	ldr	r0, =iap_para
+	ldr	r1, =iap_result
+	
+	bl	iap
+
+	ldr	r0, =iap_para
+	mov	r2, #52
+	str	r2, [r0], #4
+	mov	r2, #1
+	str	r2, [r0], #4
+	mov	r2, #6
+	str	r2, [r0], #4
+	mov	r2, #0xD800
+	str	r2, [r0], #4
+	ldr	r0, =iap_para
+	ldr	r1, =iap_result
+	
+	bl	iap
+	LDMFD SP!,{R0-R12, R14}
+	
+	
 
 	
 MAIN_LOOP:
@@ -495,6 +509,27 @@ _CREATE:
 	POP	r0
 	mov	top, r0, LSL top
 	NEXT
+	@@
+	
+	defcode "ENTER_CRITICAL",14,,ENTER_CRITICAL
+	mrs	r0, cpsr
+	orr	r0, r0, #0x80
+	msr	cpsr, r0
+	NEXT
+	
+	defcode "LEAVE_CRITICAL",14,,LEAVE_CRITICAL
+	mrs	r0, cpsr
+	bic	r0, r0, #0x80
+	msr	cpsr, r0
+	NEXT
+	
+	defcode "SAVE_CONTEXT",12,,SAVE_CONTEXT
+	stmfd	SP!,{R0-R12, R14}	
+	NEXT
+	
+	defcode "RESTORE_CONTEXT",15,,RESTORE_CONTEXT
+	LDMFD SP!,{R0-R12, R14}
+	NEXT
 	
 	@@
 	defword "END",3,F_IMMED,END
@@ -586,6 +621,13 @@ _CREATE:
 	cmp	r2, #THERE_BUF_SIZE
 	subge	r2, r2, #THERE_BUF_SIZE
 	cmp	r2, #BLK_SIZE
+	ble	2f
+	ldr	r0, =var_LATEST	@ If the word's defination is cross
+	ldr	r0, [r0]	@ the boundary, may cause problem
+	ldr	r1, =var_BLK_HERE
+	ldr	r1, [r1]
+	add	r1, r1, #BLK_SIZE
+	cmp	r0, r1
 	ble	2f
 	@@ Prepare the flash
 	STMFD SP!,{R0-R12, R14}
@@ -703,8 +745,8 @@ _FIND:
 	
 	ldr	r0, =var_LATEST
 1:
-	ldr	r1, [r0]	@ r0 = link
-	cmp	r1, #0		@ r1 = *link
+	ldr	r1, [r0]	@ r1 = link
+	cmp	r1, #0		
 	beq	4f
 	cmp	r1, #0xffffffff	@ There's no link, should be in RAM
 	bne	2f
@@ -744,9 +786,19 @@ _FIND:
 _TCFA:
 	ldrb	r0, [top, #4]
 	and	r0, r0, #F_LENMASK
-	add	top, r0, top	@ r0+4(link filed)+4(flag_len+3)-8(bl offset)
-	add	top, #8
-	and	top, top, #~3   @ top: CFA of the word is being compiled
+	add	r0, r0, top	@ r0+4(link filed)+4(flag_len+3)-8(bl offset)
+	add	r0, #8
+	and	r0, top, #~3   @ top: CFA of the word is being compiled
+	cmp	r0, #0x40000000
+	blt	10f
+	ldr	r2, =var_BLK_THERE
+	ldr	r2, [r2]
+	ldr	r3, =var_BLK_HERE
+	ldr	r3, [r3]
+	sub	r2, r2, r3	@ r2 = BLK_THERE - BLK_HERE
+	sub	r0, r0, r2
+10:
+	mov	top, r0
 	NEXT
 
 	defcode "IMMEDIATE",9,F_IMMED,IMMEDIATE

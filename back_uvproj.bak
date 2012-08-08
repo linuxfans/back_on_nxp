@@ -280,8 +280,8 @@
             <umfTarg>1</umfTarg>
             <enaGarb>0</enaGarb>
             <noStart>1</noStart>
-            <noStLib>0</noStLib>
-            <uMathLib>1</uMathLib>
+            <noStLib>1</noStLib>
+            <uMathLib>0</uMathLib>
             <TextAddressRange></TextAddressRange>
             <DataAddressRange></DataAddressRange>
             <BSSAddressRange></BSSAddressRange>

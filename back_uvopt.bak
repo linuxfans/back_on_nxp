@@ -129,7 +129,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGDARM</Key>
-          <Name>(134=-1,-1,-1,-1,0)(135=-1,-1,-1,-1,0)(107=-1,-1,-1,-1,0)(108=-1,-1,-1,-1,0)(106=-1,-1,-1,-1,0)(105=-1,-1,-1,-1,0)(145=-1,-1,-1,-1,0)(147=-1,-1,-1,-1,0)(80=-1,-1,-1,-1,0)(104=135,168,441,576,0)(100=761,375,1334,546,1)(101=761,191,1334,362,1)(160=-1,-1,-1,-1,0)(161=-1,-1,-1,-1,0)(113=-1,-1,-1,-1,0)(112=-1,-1,-1,-1,0)(137=-1,-1,-1,-1,0)(138=-1,-1,-1,-1,0)(117=-1,-1,-1,-1,0)(146=-1,-1,-1,-1,0)(110=-1,-1,-1,-1,0)(111=-1,-1,-1,-1,0)(114=-1,-1,-1,-1,0)(141=-1,-1,-1,-1,0)(144=-1,-1,-1,-1,0)(115=-1,-1,-1,-1,0)(116=-1,-1,-1,-1,0)</Name>
+          <Name>(134=-1,-1,-1,-1,0)(135=-1,-1,-1,-1,0)(107=-1,-1,-1,-1,0)(108=-1,-1,-1,-1,0)(106=-1,-1,-1,-1,0)(105=-1,-1,-1,-1,0)(145=-1,-1,-1,-1,0)(147=-1,-1,-1,-1,0)(80=973,186,1474,585,1)(104=135,168,441,576,0)(100=761,375,1334,546,1)(101=761,191,1334,362,1)(160=-1,-1,-1,-1,0)(161=-1,-1,-1,-1,0)(113=534,10,909,558,0)(112=-1,-1,-1,-1,0)(137=-1,-1,-1,-1,0)(138=-1,-1,-1,-1,0)(117=-1,-1,-1,-1,0)(146=-1,-1,-1,-1,0)(110=-1,-1,-1,-1,0)(111=-1,-1,-1,-1,0)(114=-1,-1,-1,-1,0)(141=-1,-1,-1,-1,0)(144=-1,-1,-1,-1,0)(115=-1,-1,-1,-1,0)(116=-1,-1,-1,-1,0)</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -140,15 +140,15 @@
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
-          <SubType>0</SubType>
-          <ItemText>0x000014f0</ItemText>
+          <SubType>8</SubType>
+          <ItemText>0x40001800</ItemText>
         </Mm>
       </MemoryWindow1>
       <MemoryWindow2>
         <Mm>
           <WinNumber>2</WinNumber>
-          <SubType>0</SubType>
-          <ItemText>0x00000000</ItemText>
+          <SubType>8</SubType>
+          <ItemText>0x00001000</ItemText>
         </Mm>
       </MemoryWindow2>
       <MemoryWindow3>
@@ -161,8 +161,8 @@
       <MemoryWindow4>
         <Mm>
           <WinNumber>4</WinNumber>
-          <SubType>0</SubType>
-          <ItemText>0x40001800</ItemText>
+          <SubType>8</SubType>
+          <ItemText>0x00008930</ItemText>
         </Mm>
       </MemoryWindow4>
       <DebugFlag>
@@ -170,14 +170,14 @@
         <periodic>1</periodic>
         <aLwin>1</aLwin>
         <aCover>0</aCover>
-        <aSer1>0</aSer1>
+        <aSer1>1</aSer1>
         <aSer2>0</aSer2>
         <aPa>0</aPa>
         <viewmode>1</viewmode>
         <vrSel>0</vrSel>
         <aSym>0</aSym>
         <aTbox>0</aTbox>
-        <AscS1>0</AscS1>
+        <AscS1>1</AscS1>
         <AscS2>0</AscS2>
         <AscS3>0</AscS3>
         <aSer3>0</aSer3>
@@ -209,8 +209,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>368</TopLine>
-      <CurrentLine>368</CurrentLine>
+      <TopLine>760</TopLine>
+      <CurrentLine>765</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\start.S</PathWithFileName>
       <FilenameWithoutPath>start.S</FilenameWithoutPath>
@@ -219,8 +219,8 @@
 
   <AlienFiles>
     <PathWithFilename>C:\Users\zhx\Desktop\back_on_nxp\linkscript.ld</PathWithFilename>
-    <TopLine>54</TopLine>
-    <CurrentLine>59</CurrentLine>
+    <TopLine>13</TopLine>
+    <CurrentLine>17</CurrentLine>
     <Constant>0</Constant>
     <WindowPosition>
       <length>0</length>
@@ -248,19 +248,19 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>1</ActiveTab>
+      <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
           <Name>.\start.S</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>368</TopLine>
-          <CurrentLine>368</CurrentLine>
+          <TopLine>760</TopLine>
+          <CurrentLine>765</CurrentLine>
         </Doc>
         <Doc>
           <Name>C:\Users\zhx\Desktop\back_on_nxp\linkscript.ld</Name>
-          <ColumnNumber>16</ColumnNumber>
-          <TopLine>54</TopLine>
-          <CurrentLine>59</CurrentLine>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>13</TopLine>
+          <CurrentLine>17</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>

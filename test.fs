@@ -18,13 +18,27 @@ VARIABLE myvar2
 0xE0028018 CONSTANT IODIR1
 0xE002801C CONSTANT IOCLR1
 
-: >CFA
-    DUP
-    0x4 + C@				\ TOP = flag
-    F_LENMASK AND			\ TOP = len
-    + 0x8 +				\ TOP = CFA + x
-    0xFFFFFFFC AND			\ Boundary
-;
+END
+
+0xe000c000 CONSTANT  U0DATA
+0xe000c000 CONSTANT  U0DLL
+0xe000c004 CONSTANT  U0DLM
+0xe000c004 CONSTANT  U0IER
+0xe000c008 CONSTANT  U0IIR
+0xe000c008 CONSTANT  U0FCR
+0xe000c00c CONSTANT  U0LCR
+0xe000c014 CONSTANT  U0LSR
+0xe000c020 CONSTANT  U0ACR
+0xe000c028 CONSTANT  U0FDR
+0xe000c030 CONSTANT  U0TER
+
+
+0xfffff010 CONSTANT VICIntEnable
+0xfffff118 CONSTANT VICVectAddr6
+0xfffff218 CONSTANT VICVectCntl6
+0xfffff030 CONSTANT VICVectAddr	
+END
+
 
 : ' IMMEDIATE
     WORD FIND
@@ -88,9 +102,48 @@ END
     THEN
 ;
 
-: init-uart0
+: uart0-irq
+    SAVE_CONTEXT
+    U0IIR @
+    0x0E AND
+    0x04 - IF
+	DROP
+    ELSE
+	DROP
+	U0DATA @ U0DATA !	
+    THEN
+    U0IIR @
+    0x0E AND
+    0x0C - IF
+	DROP
+    ELSE
+	DROP
+	U0DATA @ U0DATA !	
+    THEN
 
+    0x00 VICVectAddr !
+    RESTORE_CONTEXT
 ;
+
+
+: init-uart0
+    \ Init Pin
+    PINSEL0 @
+    0x05 OR
+    PINSEL0 !
+    \ Init Uart0
+    0x00 U0IER !	\ Disable uart0 irq
+    0x83 U0LCR !	\ 8bits, 1 stop, no parity
+    0x5a U0DLL !	\ 9600bps, 18.384MHz * 3 / 4 / (16 * BAUD)
+    0x00 U0DLM !	\ 9600bps, 18.384MHz * 3 / 4 / (16 * BAUD)    
+    0x03 U0LCR !	\ Latch DLL
+    0x01 U0FCR !
+    LIT [ ' uart0-irq , ] VICVectAddr6 !
+    0x26 VICVectCntl6 !
+    0x01 0x06 << VICIntEnable !
+    0x03 U0IER ! 		
+;
+
 : init-led
     IODIR1 @
     0x1 0x14 << OR
@@ -98,7 +151,6 @@ END
     IODIR1 @
     0x1 0x15 << OR
     IODIR1 !
-
     0x1 0x14 << IOSET1 !
     0x1 0x15 << IOCLR1 !
 ;
@@ -106,6 +158,7 @@ END
 : init
     init-led
     init-uart0
+    LEAVE_CRITICAL
 ;
 
 : main_loop
