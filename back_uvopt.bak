@@ -25,7 +25,7 @@
     <ToolsetNumber>0x3</ToolsetNumber>
     <ToolsetName>ARM-GNU</ToolsetName>
     <TargetOption>
-      <CLKARM>12000000</CLKARM>
+      <CLKARM>18340000</CLKARM>
       <OPTTT>
         <gFlags>1</gFlags>
         <BeepAtEnd>1</BeepAtEnd>
@@ -129,7 +129,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGDARM</Key>
-          <Name>(134=-1,-1,-1,-1,0)(135=-1,-1,-1,-1,0)(107=-1,-1,-1,-1,0)(108=-1,-1,-1,-1,0)(106=-1,-1,-1,-1,0)(105=-1,-1,-1,-1,0)(145=-1,-1,-1,-1,0)(147=-1,-1,-1,-1,0)(80=-1,-1,-1,-1,0)(104=-1,-1,-1,-1,0)(100=-1,-1,-1,-1,0)(101=-1,-1,-1,-1,0)(160=-1,-1,-1,-1,0)(161=-1,-1,-1,-1,0)(113=-1,-1,-1,-1,0)(112=-1,-1,-1,-1,0)(137=-1,-1,-1,-1,0)(138=-1,-1,-1,-1,0)(117=-1,-1,-1,-1,0)(146=-1,-1,-1,-1,0)(110=-1,-1,-1,-1,0)(111=-1,-1,-1,-1,0)(114=-1,-1,-1,-1,0)(141=-1,-1,-1,-1,0)(144=-1,-1,-1,-1,0)(115=-1,-1,-1,-1,0)(116=-1,-1,-1,-1,0)</Name>
+          <Name>(134=-1,-1,-1,-1,0)(135=-1,-1,-1,-1,0)(107=-1,-1,-1,-1,0)(108=-1,-1,-1,-1,0)(106=-1,-1,-1,-1,0)(105=-1,-1,-1,-1,0)(145=-1,-1,-1,-1,0)(147=-1,-1,-1,-1,0)(80=-1,-1,-1,-1,0)(104=135,168,441,576,0)(100=761,375,1334,546,1)(101=761,191,1334,362,1)(160=-1,-1,-1,-1,0)(161=-1,-1,-1,-1,0)(113=-1,-1,-1,-1,0)(112=-1,-1,-1,-1,0)(137=-1,-1,-1,-1,0)(138=-1,-1,-1,-1,0)(117=-1,-1,-1,-1,0)(146=-1,-1,-1,-1,0)(110=-1,-1,-1,-1,0)(111=-1,-1,-1,-1,0)(114=-1,-1,-1,-1,0)(141=-1,-1,-1,-1,0)(144=-1,-1,-1,-1,0)(115=-1,-1,-1,-1,0)(116=-1,-1,-1,-1,0)</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -141,14 +141,14 @@
         <Mm>
           <WinNumber>1</WinNumber>
           <SubType>0</SubType>
-          <ItemText>0x00001000</ItemText>
+          <ItemText>0x000014f0</ItemText>
         </Mm>
       </MemoryWindow1>
       <MemoryWindow2>
         <Mm>
           <WinNumber>2</WinNumber>
           <SubType>0</SubType>
-          <ItemText>0x40000370</ItemText>
+          <ItemText>0x00000000</ItemText>
         </Mm>
       </MemoryWindow2>
       <MemoryWindow3>
@@ -209,8 +209,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>726</TopLine>
-      <CurrentLine>754</CurrentLine>
+      <TopLine>368</TopLine>
+      <CurrentLine>368</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\start.S</PathWithFileName>
       <FilenameWithoutPath>start.S</FilenameWithoutPath>
@@ -219,8 +219,8 @@
 
   <AlienFiles>
     <PathWithFilename>C:\Users\zhx\Desktop\back_on_nxp\linkscript.ld</PathWithFilename>
-    <TopLine>28</TopLine>
-    <CurrentLine>28</CurrentLine>
+    <TopLine>54</TopLine>
+    <CurrentLine>59</CurrentLine>
     <Constant>0</Constant>
     <WindowPosition>
       <length>0</length>
@@ -248,19 +248,19 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>0</ActiveTab>
+      <ActiveTab>1</ActiveTab>
       <Documents>
         <Doc>
           <Name>.\start.S</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>726</TopLine>
-          <CurrentLine>754</CurrentLine>
+          <TopLine>368</TopLine>
+          <CurrentLine>368</CurrentLine>
         </Doc>
         <Doc>
           <Name>C:\Users\zhx\Desktop\back_on_nxp\linkscript.ld</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>28</TopLine>
-          <CurrentLine>28</CurrentLine>
+          <ColumnNumber>16</ColumnNumber>
+          <TopLine>54</TopLine>
+          <CurrentLine>59</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>

@@ -1,7 +1,5 @@
-				@filename: start.S
 
-	@@ Phase Locked Loop (PLL) definitions
-        .equ    PLL_BASE,       0xE01FC080  /* PLL Base Address */
+	.equ    PLL_BASE,       0xE01FC080  /* PLL Base Address */
         .equ    PLLCON_OFS,     0x00        /* PLL Control Offset*/
         .equ    PLLCFG_OFS,     0x04        /* PLL Configuration Offset */
         .equ    PLLSTAT_OFS,    0x08        /* PLL Status Offset */
@@ -11,20 +9,50 @@
         .equ    PLLCFG_MSEL,    (0x1F<<0)   /* PLL Multiplier */
         .equ    PLLCFG_PSEL,    (0x03<<5)   /* PLL Divider */
         .equ    PLLSTAT_PLOCK,  (1<<10)     /* PLL Lock Status */
-
         .equ    PLL_SETUP,      1
         .equ    PLLCFG_Val,     0x00000022
 
 
+
 	.text
 	.align 4
-	.global _start		
+	.global _start
+
+Vectors:        LDR     PC, Reset_Addr         
+                LDR     PC, Undef_Addr
+                LDR     PC, SWI_Addr
+                LDR     PC, PAbt_Addr
+                LDR     PC, DAbt_Addr
+                NOP                            /* Reserved Vector */
+#               LDR     PC, IRQ_Addr
+                LDR     PC, [PC, #-0x0FF0]     /* Vector from VicVectAddr */
+                LDR     PC, FIQ_Addr
+
+Reset_Addr:     .word   Reset_Handler
+Undef_Addr:     .word   Undef_Handler
+SWI_Addr:       .word   0
+PAbt_Addr:      .word   PAbt_Handler
+DAbt_Addr:      .word   PAbt_Handler
+                .word   0                      /* Reserved Address */
+IRQ_Addr:       .word   IRQ_Handler
+FIQ_Addr:       .word   FIQ_Handler	
+
+Undef_Handler:
+	B       Undef_Handler
+#SWI_Handler:    B       SWI_Handler
+PAbt_Handler:
+	B       PAbt_Handler
+#DAbt_Handler:   B       DAbt_Handler
+IRQ_Handler:
+	B       IRQ_Handler
+FIQ_Handler:
+	B       FIQ_Handler	
 	
 	top	.req	r11
 	rsp	.req	sp
 	psp	.req	r12
 	
-_start:	
+Reset_Handler:	
 	b	_reset
 	
 	.text
@@ -41,7 +69,8 @@ name_\label :
 	.ascii "\name"	
 	.align 2	
 	.globl code_\label
-code_\label :
+
+	 code_\label :
 	.endm
 
 	.macro defword name, namelen, flags=0, label
@@ -93,7 +122,7 @@ var_\name :
 	.macro POP reg
 	ldmfd	psp!, {\reg}
 	.endm
-	
+
 _reset:	
 	@@ set the cpu to SVC32 mode 
 	mrs	r0,cpsr
@@ -101,30 +130,62 @@ _reset:
 	orr	r0,r0,#0xd3
 	msr	cpsr,r0
 
-@@ 	@@ Init PLL
-@@ 	LDR     R0, =PLL_BASE
-@@ 	MOV     R1, #0xAA
-@@ 	MOV     R2, #0x55
+	@@ Init PLL
+	LDR     R0, =PLL_BASE
+	MOV     R1, #0xAA
+	MOV     R2, #0x55
 
-@@ 	MOV     R3, #PLLCFG_Val
-@@ 	STR     R3, [R0, #PLLCFG_OFS] 
-@@ 	MOV     R3, #PLLCON_PLLE
-@@ 	STR     R3, [R0, #PLLCON_OFS]
-@@ 	STR     R1, [R0, #PLLFEED_OFS]
-@@ 	STR     R2, [R0, #PLLFEED_OFS]
+	MOV     R3, #PLLCFG_Val
+	STR     R3, [R0, #PLLCFG_OFS] 
+	MOV     R3, #PLLCON_PLLE
+	STR     R3, [R0, #PLLCON_OFS]
+	STR     R1, [R0, #PLLFEED_OFS]
+	STR     R2, [R0, #PLLFEED_OFS]
 
 
-@@ PLL_Loop:
-@@ 	LDR     R3, [R0, #PLLSTAT_OFS]
-@@ 	ANDS    R3, R3, #PLLSTAT_PLOCK
-@@ 	BEQ     PLL_Loop
+PLL_Loop:
+	LDR     R3, [R0, #PLLSTAT_OFS]
+	ANDS    R3, R3, #PLLSTAT_PLOCK
+	BEQ     PLL_Loop
 
-@@ 	MOV     R3, #(PLLCON_PLLE | PLLCON_PLLC)
-@@ 	STR     R3, [R0, #PLLCON_OFS]
-@@ 	STR     R1, [R0, #PLLFEED_OFS]
-@@ 	STR     R2, [R0, #PLLFEED_OFS]
+	MOV     R3, #(PLLCON_PLLE | PLLCON_PLLC)
+	STR     R3, [R0, #PLLCON_OFS]
+	STR     R1, [R0, #PLLFEED_OFS]
+	STR     R2, [R0, #PLLFEED_OFS]
+
+
 	
+	@@ Erase 4kB~28kB
 
+	STMFD SP!,{R0-R12, R14}
+	
+	ldr	r0, =iap_para
+	mov	r2, #50
+	str	r2, [r0], #4
+	mov	r2, #1
+	str	r2, [r0], #4
+	mov	r2, #6
+	str	r2, [r0], #4
+	ldr	r0, =iap_para
+	ldr	r1, =iap_result
+	
+	bl	iap
+
+	ldr	r0, =iap_para
+	mov	r2, #52
+	str	r2, [r0], #4
+	mov	r2, #1
+	str	r2, [r0], #4
+	mov	r2, #6
+	str	r2, [r0], #4
+	mov	r2, #0xD800
+	str	r2, [r0], #4
+	ldr	r0, =iap_para
+	ldr	r1, =iap_result
+	
+	bl	iap
+	LDMFD SP!,{R0-R12, R14}
+	
 	@@ Init State
 	ldr	r0, =var_STATE
 	mov	r1, #1
@@ -173,43 +234,14 @@ _reset:
 	ldr	r1, =data_here
 	str	r1, [r0]	
 
-	@@ Erase 4kB~28kB
-
-	ldr	r0, =iap_para
-	mov	r2, #50
-	str	r2, [r0], #4
-	mov	r2, #1
-	str	r2, [r0], #4
-	mov	r2, #6
-	str	r2, [r0], #4
-	ldr	r0, =iap_para
-	ldr	r1, =iap_result
 	
-	mov	r2, #0x7ffffff1
-	mov	lr, pc
-	bx	r2
-
-	ldr	r0, =iap_para
-	mov	r2, #52
-	str	r2, [r0], #4
-	mov	r2, #1
-	str	r2, [r0], #4
-	mov	r2, #6
-	str	r2, [r0], #4
-	mov	r2, #0x62000
-	str	r2, [r0], #4
-	ldr	r0, =iap_para
-	ldr	r1, =iap_result
-	
-	mov	r2, #0x7ffffff1
-	mov	lr, pc
-	bx	r2
 MAIN_LOOP:
 	bl	code_INTERPRET
-	b	MAIN_LOOP
+	b	MAIN_LOOP	
+
 
 	defword "INTERPRET",9,,INTERPRET
-	bl	_WORD
+	bl	code_WORD
 	bl	_FIND
 	cmp	top, #0		@ top = link address
 	beq	2f		@ Not Found
@@ -321,7 +353,7 @@ error:
 	defvar "BLK_HERE",8,,BLK_HERE	
 	defvar "THERE",5,,THERE
 	defvar "BLK_THERE",9,,BLK_THERE	
-	defvar "LATEST",6,,LATEST, name_OVER
+	defvar "LATEST",6,,LATEST
 	defvar "S0",2,,SZ
 	defvar "TIB",3,,TIB
 	defvar "DHERE", 5,, DHERE
@@ -445,13 +477,24 @@ _CREATE:
 	POP	r0
 	and	top, top , r0
 	NEXT
+	@@
+	
+	defcode "OR",2,,OR
+	POP	r0
+	orr	top, top , r0
+	NEXT
 	
 	@@ 
-	defcode "LSR",3,,LSR
+	defcode ">>",2,,LSR
 	POP	r0
 	mov	top, r0, LSR top
 	NEXT
 	
+	@@ 
+	defcode "<<",2,,LSL
+	POP	r0
+	mov	top, r0, LSL top
+	NEXT
 	
 	@@
 	defword "END",3,F_IMMED,END
@@ -465,7 +508,10 @@ _CREATE:
 	cmp	r2, #THERE_BUF_SIZE
 	subge	r2, r2, #THERE_BUF_SIZE
 	@@ Prepare the flash
-	mov	r3, r1, LSR #12	@ BLK_THERE / 4k
+	STMFD SP!,{R0-R12, R14}
+	ldr	r1, =var_BLK_HERE
+	ldr	r1, [r1]	@ r1 = BLK_HERE
+	mov	r3, r1, LSR #12	@ BLK_HERE / 4k
 	and	r3, r3, #0xFF
 	ldr	r0, =iap_para
 	mov	r2, #50
@@ -476,9 +522,8 @@ _CREATE:
 	str	r2, [r0], #4
 	ldr	r0, =iap_para
 	ldr	r1, =iap_result
-	mov	r2, #0x7ffffff1
-	mov	lr, pc
-	bx	r2
+	bl	iap
+	
 	@@ Write the flash
 	ldr	r0, =iap_para
 	mov	r2, #51
@@ -491,13 +536,16 @@ _CREATE:
 	str	r2, [r0], #4
 	mov	r2, #BLK_SIZE
 	str	r2, [r0], #4
-	mov	r2, #0x62000
+	mov	r2, #0xD800	
 	str	r2, [r0], #4
 	ldr	r0, =iap_para
 	ldr	r1, =iap_result
-	mov	r2, #0x7ffffff1
-	mov	lr, pc
-	bx	r2
+	bl	iap
+
+	LDMFD SP!,{R0-R12, R14}
+
+
+
 	@@ Update BLK_HERE and BLK_THERE
 	ldr	r0, =var_BLK_HERE
 	ldr	r1, [r0]
@@ -540,7 +588,10 @@ _CREATE:
 	cmp	r2, #BLK_SIZE
 	ble	2f
 	@@ Prepare the flash
-	mov	r3, r1, LSR #12	@ BLK_THERE / 4k
+	STMFD SP!,{R0-R12, R14}
+	ldr	r1, =var_BLK_HERE
+	ldr	r1, [r1]	@ r1 = BLK_HERE
+	mov	r3, r1, LSR #12	@ BLK_HERE / 4k
 	and	r3, r3, #0xFF
 	ldr	r0, =iap_para
 	mov	r2, #50
@@ -551,9 +602,8 @@ _CREATE:
 	str	r2, [r0], #4
 	ldr	r0, =iap_para
 	ldr	r1, =iap_result
-	mov	r2, #0x7ffffff1
-	mov	lr, pc
-	bx	r2
+	bl	iap
+	
 	@@ Write the flash
 	ldr	r0, =iap_para
 	mov	r2, #51
@@ -566,13 +616,12 @@ _CREATE:
 	str	r2, [r0], #4
 	mov	r2, #BLK_SIZE
 	str	r2, [r0], #4
-	mov	r2, #0x62000
+	mov	r2, #0xD800
 	str	r2, [r0], #4
 	ldr	r0, =iap_para
 	ldr	r1, =iap_result
-	mov	r2, #0x7ffffff1
-	mov	lr, pc
-	bx	r2
+	bl	iap
+	LDMFD SP!,{R0-R12, R14}
 	@@ Update BLK_HERE and BLK_THERE
 	ldr	r0, =var_BLK_HERE
 	ldr	r1, [r0]
@@ -607,12 +656,12 @@ _CREATE:
 _WORD:
 	ldr	r0, =var_TIB
 	ldr	r0, [r0]
+
 1:
 	ldrb	r1, [r0], #1
+	
+	
 	cmp	r1, #0
-	ldreq	r5, =var_S0
-	moveq	r6, #0xAA
-	streq	r6, [r5]
 	beq	END_LOOP	
 	cmp	r1, $'\\'
 	beq	3f
@@ -626,9 +675,6 @@ _WORD:
 	add	top, top, #1
 	ldrb	r1, [r0], #1
 	cmp	r1, #0
-	ldreq	r5, =var_S0
-	moveq	r6, #0xFF
-	streq	r6, [r5]
 	beq	END_LOOP	
 	cmp	r1, $' '	
 	bhi	2b
@@ -654,8 +700,8 @@ _WORD:
 	bl	_FIND
 	bl	code_EXIT
 _FIND:
-	ldr	r0, =var_LATEST
 	
+	ldr	r0, =var_LATEST
 1:
 	ldr	r1, [r0]	@ r0 = link
 	cmp	r1, #0		@ r1 = *link
@@ -682,7 +728,6 @@ _FIND:
 	ldr	r5, [psp]
 	ldrb	r4, [r5, r3]
 	cmp	r2, r4
-
 	bne	1b		@ Different character, move to next word in dict
 	cmp	r3, #0
 	bne	3b		@ Continue to compare
@@ -750,7 +795,7 @@ _TCFA:
 	bl	_WORD
 	bl	_CREATE
 	bl	code_LIT
-	PUSH	top;
+	PUSH	top
 	bl	code_COMMA
 	bl	code_LIT
 	ldr	top, [pc, #0]
@@ -788,11 +833,15 @@ _TCFA:
 	PUSH	top
 	mov	top, r0
 	NEXT
+
+iap:	
+	mov	r2, #0x7ffffff1
+	bx	r2
 	
 	
 END_LOOP:
-TRUE_END_LOOP:	
-		b	TRUE_END_LOOP
+TRUE_END_LOOP:
+	b	TRUE_END_LOOP
 _code_end:	
 
 	.section .rodata
@@ -805,8 +854,8 @@ FORTH_FILE:
 	.align 4
 
 	.data			
-	.set RETURN_STACK_SIZE,128
-	.set PARAMETER_STACK_SIZE,128
+	.set RETURN_STACK_SIZE,256
+	.set PARAMETER_STACK_SIZE,256
 	.set DICTIONARY_SIZE,4
 	.data
 	.align 4

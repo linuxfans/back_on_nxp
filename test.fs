@@ -9,6 +9,14 @@ VARIABLE myvar2
 0x0A000000 CONSTANT BEQ
 0xEA000000 CONSTANT BAL
 
+0xE002C000 CONSTANT PINSEL0
+0xE002C004 CONSTANT PINSEL1
+0xE002C008 CONSTANT PINSEL2
+
+0xE0028010 CONSTANT IOPIN1
+0xE0028014 CONSTANT IOSET1
+0xE0028018 CONSTANT IODIR1
+0xE002801C CONSTANT IOCLR1
 
 : >CFA
     DUP
@@ -24,7 +32,7 @@ VARIABLE myvar2
 ;
 
 END
-    
+
 : IF IMMEDIATE
     LIT [ ' 0= @ , ] ,
     THERE @
@@ -36,7 +44,7 @@ END
     SWAP
     0x8 +    				\ old PC + 8
     -
-    0x02 LSR				
+    0x02 >>
     0x00FFFFFF AND
     SWAP
     @
@@ -50,7 +58,6 @@ END
     SWAP
 
     RESOLVE
-
 ;
 
 : THEN IMMEDIATE
@@ -82,12 +89,32 @@ END
 ;
 
 : init-uart0
-    init-uart1
+
+;
+: init-led
+    IODIR1 @
+    0x1 0x14 << OR
+    IODIR1 !
+    IODIR1 @
+    0x1 0x15 << OR
+    IODIR1 !
+
+    0x1 0x14 << IOSET1 !
+    0x1 0x15 << IOCLR1 !
 ;
 
 : init
-    init-uart1
+    init-led
+    init-uart0
 ;
 
-END
-init-uart1
+: main_loop
+;
+
+: main
+    init
+    main_loop
+;
+END main
+
+
