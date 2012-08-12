@@ -3,7 +3,6 @@
 0x400000A0 CONSTANT mycon2
 VARIABLE myvar1
 VARIABLE myvar2
-VARIABLE myvar3
 
 0x1F CONSTANT F_LENMASK
 
@@ -80,7 +79,6 @@ END
 ;
 
 : DO IMMEDIATE
-    THERE @
 ;
 
 : UNTIL IMMEDIATE
@@ -88,17 +86,9 @@ END
     THERE @
     BEQ ,
 
-    SWAP
-    THERE @
-    0x08 +
-    -
-    0x02 >>
-    0x00FFFFFF AND
-    BAL +
-    ,
-
     RESOLVE
 ;
+
 
 END
 
@@ -185,25 +175,12 @@ END
 ;
 
 : main_loop
-    0x10 DUP
-    DO
-	DROP				\ 0x10
-	DUP				\ 0x10 0x10 
-	DUP				\ 0x10 0x10 0x10
-	DUP				\ 0x10 0x10 0x10 0x10 
-	0x40000B00 + C!			\ 0x10 0x10 0x10
-	0x01 -				\ 0x10 0x0f
-	SWAP				\ 0x0f 0x10
-    UNTIL
-    DROP
-    0x10 0x40000B00 !
-    IF THEN
 ;
 
 : main
+    init
     main_loop
 ;
-
 END main
 
 

@@ -463,13 +463,6 @@ _CREATE:
 	str	r0, [top]
 	POP	top
 	NEXT
-	
-	@@ 
-	defcode "C!",2,,CSTORE
-	POP	r0
-	strb	r0, [top]
-	POP	top
-	NEXT
 
 	@@ 
 	defcode "@",1,,FETCH
@@ -505,16 +498,10 @@ _CREATE:
 	orr	top, top , r0
 	NEXT
 	
-	defcode "NOT",3,,NOT
-	cmp	top, #0
-	moveq	top, #1
-	movne	top, #0
-	NEXT
-	
 	@@ 
-	defcode ">>",2,,ASR
+	defcode ">>",2,,LSR
 	POP	r0
-	mov	top, r0, ASR top
+	mov	top, r0, LSR top
 	NEXT
 	
 	@@ 
@@ -801,7 +788,7 @@ _TCFA:
 	and	r0, r0, #F_LENMASK
 	add	r0, r0, top	@ r0+4(link filed)+4(flag_len+3)-8(bl offset)
 	add	r0, #8
-	and	r0, r0, #~3   @ top: CFA of the word is being compiled
+	and	r0, top, #~3   @ top: CFA of the word is being compiled
 	cmp	r0, #0x40000000
 	blt	10f
 	ldr	r2, =var_BLK_THERE
