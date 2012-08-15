@@ -5,10 +5,13 @@ VARIABLE myvar1
 VARIABLE myvar2
 VARIABLE myvar3
 
+VARIABLE U0IIR_TMP
+
 0x1F CONSTANT F_LENMASK
 
 0x0A000000 CONSTANT BEQ
 0xEA000000 CONSTANT BAL
+0xEB000000 CONSTANT ARM_BL
 
 0xE002C000 CONSTANT PINSEL0
 0xE002C004 CONSTANT PINSEL1
@@ -46,10 +49,25 @@ END
     >CFA
 ;
 
+: BOFFSET
+    0x8 +    				\ old PC + 8
+    -
+    0x02 >>
+    0x00FFFFFF AND
+;
+
+: BLTO					  \ Branch to
+    THERE @
+    BOFFSET
+    ARM_BL +
+;
+
+
 END
 
 : IF IMMEDIATE
     LIT [ ' 0= @ , ] ,
+    LIT [ ' DROP , ] BLTO ,
     THERE @
     BEQ ,
 ;
@@ -57,10 +75,7 @@ END
     DUP DUP
     THERE @				\ new PC
     SWAP
-    0x8 +    				\ old PC + 8
-    -
-    0x02 >>
-    0x00FFFFFF AND
+    BOFFSET
     SWAP
     @
     +
@@ -79,7 +94,7 @@ END
     RESOLVE
 ;
 
-: DO IMMEDIATE
+: BEGIN IMMEDIATE
     THERE @
 ;
 
@@ -90,10 +105,7 @@ END
 
     SWAP
     THERE @
-    0x08 +
-    -
-    0x02 >>
-    0x00FFFFFF AND
+    BOFFSET
     BAL +
     ,
 
@@ -101,54 +113,30 @@ END
 ;
 
 END
-
-: test1
-    ten myvar1 !
-    myvar1 @ mycon1 !
-;
-
-: test2
-    ten myvar2 !
-    myvar2 @ mycon2 !
-    0x10 mycon2 !
-;
-
-: init-uart1
-    0x1
-    IF
-	test1
-	test2
-	0x10 mycon2 !	
-    ELSE
-	0x20 mycon2 !	
-    THEN
-;
-
 : uart0-irq
+    ENTER_CRITICAL
     SAVE_CONTEXT
-    U0IIR @ myvar1 !
-    myvar1 @
-    0x0E AND
-    0x04 - IF
-	DROP
-    ELSE
-	DROP
-	U0DATA @ U0DATA !	
-    THEN
-    myvar1 @    
-    0x0E AND
-    0x0C - IF
-	DROP
-    ELSE
-	DROP
-	U0DATA @ U0DATA !	
-    THEN
-
+    U0IIR @ U0IIR_TMP !
+    BEGIN
+	U0IIR_TMP @
+	0x0E AND
+	0x04 - NOT IF
+	    U0DATA @ U0DATA !	
+	THEN
+	U0IIR_TMP @	
+	0x0E AND
+	0x0C - NOT IF
+	    U0DATA @ U0DATA !	
+	THEN
+	U0IIR @ DUP U0IIR_TMP ! 0x01 AND NOT
+    UNTIL
+    DROP
     0x00 VICVectAddr !
     RESTORE_CONTEXT
+    LEAVE_CRITICAL
 ;
-
-
+	    
+    
 : init-uart0
     \ Init Pin
     PINSEL0 @
@@ -185,22 +173,10 @@ END
 ;
 
 : main_loop
-    0x10 DUP
-    DO
-	DROP				\ 0x10
-	DUP				\ 0x10 0x10 
-	DUP				\ 0x10 0x10 0x10
-	DUP				\ 0x10 0x10 0x10 0x10 
-	0x40000B00 + C!			\ 0x10 0x10 0x10
-	0x01 -				\ 0x10 0x0f
-	SWAP				\ 0x0f 0x10
-    UNTIL
-    DROP
-    0x10 0x40000B00 !
-    IF THEN
 ;
 
 : main
+    init
     main_loop
 ;
 

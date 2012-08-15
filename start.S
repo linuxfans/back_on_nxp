@@ -105,6 +105,11 @@ var_\name :
 	
 	.macro	DOCOL
 	PUSHRSP	lr
+	.endm
+	
+	.macro	DOCOLO
+	sub	lr, lr, #4
+	PUSHRSP	lr
 	.endm	
 
 	.macro PUSHRSP reg
@@ -194,14 +199,14 @@ PLL_Loop:
 	@@ Init there
 	ldr	r0, =var_THERE
 	mov	r1, #0x40000000
-	mov	r2, #0x00001800
+	mov	r2, #0x00001000
 	add	r1, r1, r2
 	str	r1, [r0]
 	
 	@@ Init blk_there
 	ldr	r0, =var_BLK_THERE
 	mov	r1, #0x40000000
-	mov	r2, #0x00001800
+	mov	r2, #0x00001000
 	add	r1, r1, r2
 	str	r1, [r0]
 
@@ -490,7 +495,7 @@ _CREATE:
 	@@ 
 	defcode "-",1,,MINUS
 	POP	r0
-	sub	top, r0 , top
+	sub	top, r0, top 
 	NEXT
 
 	@@ 
@@ -507,7 +512,7 @@ _CREATE:
 	
 	defcode "NOT",3,,NOT
 	cmp	top, #0
-	moveq	top, #1
+	moveq	top, #0xFFFFFFFF
 	movne	top, #0
 	NEXT
 	
@@ -747,7 +752,7 @@ _WORD:
 	.set F_HIDDEN,0x20
 	.set F_LENMASK,0x1f
 
-	.set THERE_BUF_SIZE, 1024
+	.set THERE_BUF_SIZE, 2048
 	.set THERE_BUF_END, 0x1C00
 	.set BLK_SIZE, 512
 
