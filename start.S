@@ -107,12 +107,7 @@ var_\name :
 	PUSHRSP	lr
 	.endm
 	
-	.macro	DOCOLO
-	sub	lr, lr, #4
-	PUSHRSP	lr
-	.endm	
-
-	.macro PUSHRSP reg
+ 	.macro PUSHRSP reg
 	stmfd	rsp!, {\reg}
 	.endm
 
@@ -909,6 +904,8 @@ iap:
 	bx	r2
 	
 	
+FALSE_END_LOOP:
+	b	FALSE_END_LOOP
 END_LOOP:
 TRUE_END_LOOP:
 	b	TRUE_END_LOOP

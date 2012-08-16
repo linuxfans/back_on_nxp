@@ -62,7 +62,6 @@ END
     ARM_BL +
 ;
 
-
 END
 
 : IF IMMEDIATE
@@ -105,15 +104,12 @@ END
 
     SWAP
     THERE @
-    0x08 +
-    SWAP
-    -
-    0x02 >>
-    0x00FFFFFF AND
+    BOFFSET
     BAL +
     ,
 
     RESOLVE
+    LIT [ ' DROP , ] BLTO ,
 ;
 
 END
@@ -134,7 +130,6 @@ END
 	THEN
 	U0IIR @ DUP U0IIR_TMP ! 0x01 AND NOT
     UNTIL
-    DROP
     0x00 VICVectAddr !
     RESTORE_CONTEXT
     LEAVE_CRITICAL

@@ -62,7 +62,6 @@ END
     ARM_BL +
 ;
 
-
 END
 
 : IF IMMEDIATE
@@ -99,7 +98,9 @@ END
 ;
 
 : UNTIL IMMEDIATE
+    
     LIT [ ' 0= @ , ] ,
+    LIT [ ' DROP , ] BLTO ,
     THERE @
     BEQ ,
 
@@ -112,25 +113,44 @@ END
     RESOLVE
 ;
 
+: WHILE IMMEDIATE
+    LIT [ ' 0= @ , ] ,
+    LIT [ ' DROP , ] BLTO ,
+    THERE @
+    BEQ ,
+;
+
+: REPEAT IMMEDIATE
+    SWAP
+    THERE @
+    BOFFSET
+    BAL +
+    ,
+    
+    RESOLVE
+    
+;
+
+    
+
 END
 : uart0-irq
     ENTER_CRITICAL
     SAVE_CONTEXT
     U0IIR @ U0IIR_TMP !
     BEGIN
-	U0IIR_TMP @
+	U0IIR_TMP @ DUP
 	0x0E AND
-	0x04 - NOT IF
-	    U0DATA @ U0DATA !	
-	THEN
-	U0IIR_TMP @	
+	0x04 -
+	SWAP
 	0x0E AND
-	0x0C - NOT IF
+	0x0C -
+	AND
+	NOT IF
 	    U0DATA @ U0DATA !	
 	THEN
 	U0IIR @ DUP U0IIR_TMP ! 0x01 AND NOT
     UNTIL
-    DROP
     0x00 VICVectAddr !
     RESTORE_CONTEXT
     LEAVE_CRITICAL
@@ -173,6 +193,13 @@ END
 ;
 
 : main_loop
+    0x10 myvar1 !
+    BEGIN
+	myvar1 @
+	0x01 - DUP myvar1 !
+    WHILE
+	myvar1 @ DUP 0x40000B00 + C!
+    REPEAT
 ;
 
 : main
