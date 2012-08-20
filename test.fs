@@ -57,7 +57,7 @@ END
 ;
 
 : BLTO					  \ Branch to
-    THERE @
+    HERE @
     BOFFSET
     ARM_BL +
 ;
@@ -212,12 +212,14 @@ END
 ;
 
 : main_loop
-    \ 0x01
-    \ CASE
-    \ 	0x01 OF 0x01 0x40000B00  C! ENDOF
-    \ 	0x02 OF 0x02 0x40000B00  C! ENDOF
-    \ 	0x03 0x40000B00  C!
-    \ ENDCASE
+    0x0
+    CASE
+    	0x01 OF 0x01 0x40000B00  C! ENDOF
+	0x02 OF 0x02 0x40000B00  C! ENDOF
+	0x03 OF 0x03 0x40000B00  C! ENDOF
+    	0x04 OF 0x04 0x40000B00  C! ENDOF	
+    	0x05 0x40000B00  C!
+    ENDCASE
 ;
 
 : main
