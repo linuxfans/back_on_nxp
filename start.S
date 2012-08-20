@@ -757,18 +757,28 @@ _WORD:
 _FIND:
 	
 	ldr	r0, =var_LATEST
+	ldr	r1, [r0]
+	ldr	r1, [r1]
+	cmp	r1, #0xffffffff
+	ldreq	r0, [r0]
+	beq	5f
 1:
 	ldr	r1, [r0]	@ r1 = link
 	cmp	r1, #0		
 	beq	4f
 	cmp	r1, #0xffffffff	@ There's no link, should be in RAM
 	bne	2f
+5:	
 	ldr	r2, =var_BLK_THERE
 	ldr	r2, [r2]
 	ldr	r3, =var_BLK_HERE
 	ldr	r3, [r3]
 	sub	r2, r2, r3	@ r2 = BLK_THERE - BLK_HERE
 	add	r0, r0, r2	@ link = THERE
+	mov	r2, #THERE_BUF_END
+	add	r2, #0x40000000
+	cmp	r0, r2
+	subge	r0, r0, #THERE_BUF_SIZE
 	mov	r1, r0
 2:	
 	ldrb	r3, [r1, #4]
@@ -852,8 +862,20 @@ _TCFA:
 	PUSH	top
 	NEXT
 	
+	defcode "?DUP",4,,NZ_DUP
+	cmp	top, #0
+	stmnefd	psp!, {top}
+	NEXT
+	
 	defcode "0=",2,,ZEQ
 	cmp	top, #0
+	NEXT
+	
+	defcode "=",1,,EQ
+	POP	r0
+	cmp	r0, top
+	moveq	top, #0xFFFFFFFF
+	movne	top, #0
 	NEXT
 	
 	defword "CONSTANT",8,F_IMMED,CONSTANT

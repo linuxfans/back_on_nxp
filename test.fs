@@ -126,6 +126,34 @@ END
 ;
 
 END
+
+: CASE IMMEDIATE
+    0x0		\ push 0 to mark the bottom of the stack )
+;
+
+: OF IMMEDIATE
+    LIT [ ' OVER , ] BLTO ,	\ compile OVER )
+    LIT [ ' = , ] BLTO ,	\ compile = )
+    [COMPILE] IF	\ compile IF )
+;
+
+: ENDOF IMMEDIATE
+    [COMPILE] ELSE	\ ENDOF is the same as ELSE )
+;
+
+: ENDCASE IMMEDIATE
+    \ keep compiling THEN until we get to our zero marker )
+    BEGIN
+	?DUP
+    WHILE
+	    [COMPILE] THEN
+    REPEAT
+    
+    LIT [ ' DROP , ] BLTO ,    
+;
+
+END
+
 : uart0-irq
     ENTER_CRITICAL
     SAVE_CONTEXT
@@ -147,7 +175,6 @@ END
     RESTORE_CONTEXT
     LEAVE_CRITICAL
 ;
-	    
     
 : init-uart0
     \ Init Pin
@@ -185,13 +212,12 @@ END
 ;
 
 : main_loop
-    0x10 myvar1 !
-    BEGIN
-	myvar1 @
-	0x01 - DUP myvar1 !
-    WHILE
-	myvar1 @ DUP 0x40000B00 + C!
-    REPEAT
+    \ 0x01
+    \ CASE
+    \ 	0x01 OF 0x01 0x40000B00  C! ENDOF
+    \ 	0x02 OF 0x02 0x40000B00  C! ENDOF
+    \ 	0x03 0x40000B00  C!
+    \ ENDCASE
 ;
 
 : main
