@@ -40,7 +40,21 @@ END
 0xfffff010 CONSTANT VICIntEnable
 0xfffff118 CONSTANT VICVectAddr6
 0xfffff218 CONSTANT VICVectCntl6
-0xfffff030 CONSTANT VICVectAddr	
+0xfffff124 CONSTANT VICVectAddr9
+0xfffff224 CONSTANT VICVectCntl9
+0xfffff030 CONSTANT VICVectAddr
+
+END
+
+0xE001C000 CONSTANT I2C0CONSET
+0xE001C004 CONSTANT I2C0STAT
+0xE001C008 CONSTANT I2C0DAT       
+0xE001C00C CONSTANT I2C0ADR       
+0xE001C010 CONSTANT I2C0SCLH      
+0xE001C014 CONSTANT I2C0SCLL      
+0xE001C018 CONSTANT I2C0CONCLR    
+
+
 END
 
 
@@ -194,6 +208,46 @@ END
     0x03 U0IER ! 		
 ;
 
+: i2c-irq
+    ENTER_CRITICAL
+    SAVE_CONTEXT
+    I2C0STAT @
+    CASE
+	0x08 OF
+	    0x74 I2C0DAT !
+	    0x28 I2C0CONCLR !
+	ENDOF
+	0x18 OF
+	    0x55 I2C0DAT !
+	    0x08 I2C0CONCLR !
+	ENDOF
+	0x28 OF
+	    0x10 I2C0CONSET !
+	    0x08 I2C0CONCLR !
+	ENDOF
+    ENDCASE
+    0xFF VICVectAddr !
+    RESTORE_CONTEXT
+    LEAVE_CRITICAL
+    
+;
+
+
+: init-i2c
+    \ Init Pin
+    PINSEL0 @
+    0x50 OR
+    PINSEL0 !
+    \ Init I2C
+    0x6c I2C0CONCLR !
+    0x40 I2C0CONSET !
+    0x0C I2C0SCLH !
+    0x0D I2C0SCLL !
+    LIT [ ' i2c-irq , ] VICVectAddr9 !
+    0x29 VICVectCntl9 !
+    0x01 0x09 << VICIntEnable !
+;
+
 : init-led
     IODIR1 @
     0x1 0x14 << OR
@@ -208,10 +262,13 @@ END
 : init
     init-led
     init-uart0
+    init-i2c
     LEAVE_CRITICAL
 ;
 
 : main_loop
+
+    0x60 I2C0CONSET !
     0x0
     CASE
     	0x01 OF 0x01 0x40000B00  C! ENDOF
