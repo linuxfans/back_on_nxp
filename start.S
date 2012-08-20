@@ -793,7 +793,7 @@ _FIND:
 	mov	top, #0
 	NEXT
 	
-	defcode ">CFA", 4,, TCFA
+	defword ">CFA", 4,, TCFA
 	bl 	_TCFA
 	bl	code_EXIT
 _TCFA:

@@ -62,6 +62,14 @@ END
     ARM_BL +
 ;
 
+: [COMPILE] IMMEDIATE
+    WORD FIND
+    >CFA
+    BLTO
+    ,
+;
+
+
 END
 
 : IF IMMEDIATE
@@ -97,27 +105,8 @@ END
     THERE @
 ;
 
-: UNTIL IMMEDIATE
-    
-    LIT [ ' 0= @ , ] ,
-    LIT [ ' DROP , ] BLTO ,
-    THERE @
-    BEQ ,
-
-    SWAP
-    THERE @
-    BOFFSET
-    BAL +
-    ,
-
-    RESOLVE
-;
-
 : WHILE IMMEDIATE
-    LIT [ ' 0= @ , ] ,
-    LIT [ ' DROP , ] BLTO ,
-    THERE @
-    BEQ ,
+    [COMPILE] IF
 ;
 
 : REPEAT IMMEDIATE
@@ -131,7 +120,10 @@ END
     
 ;
 
-    
+: UNTIL IMMEDIATE
+    [COMPILE] IF
+    [COMPILE] REPEAT
+;
 
 END
 : uart0-irq
