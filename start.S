@@ -194,14 +194,14 @@ PLL_Loop:
 	@@ Init there
 	ldr	r0, =var_THERE
 	mov	r1, #0x40000000
-	mov	r2, #0x00001000
+	mov	r2, #0x00000c00
 	add	r1, r1, r2
 	str	r1, [r0]
 	
 	@@ Init blk_there
 	ldr	r0, =var_BLK_THERE
 	mov	r1, #0x40000000
-	mov	r2, #0x00001000
+	mov	r2, #0x00000c00
 	add	r1, r1, r2
 	str	r1, [r0]
 
@@ -380,6 +380,22 @@ _CREATE:
 	ldr	r0, [r0]	@ r0 = HERE
 	ldr	r1, =var_THERE
 	ldr	r1, [r1]	@ r1 = THERE
+	mov	r3, r0
+	mov	r4, #BLK_SIZE
+	sub	r4, r4, #1
+	and	r3, r3, r4
+	cmp	r3, #(BLK_SIZE - 36) @4 link, 32 name
+	addge	r0, #36
+	mov	r3, #BLK_SIZE
+	sub	r3, r3, #1
+	mvn	r4, r3
+	andge	r0, r4
+	addge	r1, #36
+	andge	r1, r4
+	mov	r4, #0x40000000
+	add	r4, r4, #THERE_BUF_END
+	cmp	r1, r4
+	subge	r1, r1, #THERE_BUF_SIZE
 	ldr	r2, =var_LATEST	@ r2 = &LATEST
 	ldr	r3, [r2]	@ r3 = LATEST
 	str	r0, [r2]	@ LATEST = HERE
@@ -387,16 +403,28 @@ _CREATE:
 
 	add	r0, r0, #4	@ Move HERE
 	add	r1, r1, #4	@ Move THERE
+	mov	r5, #0x40000000
+	add	r5, #THERE_BUF_END
+	cmp	r1, r5
+	subge	r1, #THERE_BUF_SIZE
 
 	strb	top, [r1]	@ Store len & flg
 	add	r0, r0, #1
 	add	r1, r1, #1	@ Move HERE and THERE
+	mov	r5, #0x40000000
+	add	r5, #THERE_BUF_END
+	cmp	r1, r5
+	subge	r1, #THERE_BUF_SIZE
 	add	top, r0, top	@
 	POP	r2
 
 1:
 	ldrb	r3, [r2], #1
 	strb	r3, [r1], #1
+	mov	r5, #0x40000000
+	add	r5, #THERE_BUF_END
+	cmp	r1, r5
+	subge	r1, #THERE_BUF_SIZE
 	add	r0, r0, #1
 	cmp	top, r0
 	bne	1b
@@ -404,6 +432,10 @@ _CREATE:
 	and	r0, r0, #~3
 	add	r1, r1, #3
 	and	r1, r1, #~3
+	mov	r5, #0x40000000
+	add	r5, #THERE_BUF_END
+	cmp	r1, r5
+	subge	r1, #THERE_BUF_SIZE
 	ldr	r2, =var_HERE	@ Save HERE and THERE
 	str	r0, [r2]
 	ldr	r2, =var_THERE
@@ -537,12 +569,29 @@ _CREATE:
 	NEXT
 	
 	defcode "SAVE_CONTEXT",12,,SAVE_CONTEXT
-	stmfd	SP!,{R0-R12, R14}	
+	stmfd	SP!,{R0-R12}
 	NEXT
 	
 	defcode "RESTORE_CONTEXT",15,,RESTORE_CONTEXT
-	LDMFD SP!,{R0-R12, R14}
+	LDMFD SP!,{R0-R12}
 	NEXT
+	
+	defcode "ENTER_INTERRUPT",15,,ENTER_INTERRUPT
+	stmfd	sp!, {r0-r12}
+	mrs	r0, cpsr
+	orr	r0, r0, #0x80
+	msr	cpsr, r0
+	NEXT	
+	
+	defcode "LEAVE_INTERRUPT",15,,LEAVE_INTERRUPT
+	mrs	r0, cpsr
+	bic	r0, r0, #0x80
+	msr	cpsr, r0
+	ldmfd	sp!, {r0-r12}
+	POPRSP	lr
+	subs	pc, lr, #4
+	
+
 	
 	@@
 	defword "END",3,F_IMMED,END
@@ -555,6 +604,9 @@ _CREATE:
 	sub	r2, r0, r1	@ r2 = THERE - BLK_THERE + SIZE
 	cmp	r2, #THERE_BUF_SIZE
 	subge	r2, r2, #THERE_BUF_SIZE
+	cmp	r2, #0x0
+	ble	2f
+	
 	@@ Prepare the flash
 	STMFD SP!,{R0-R12, R14}
 	ldr	r1, =var_BLK_HERE
@@ -593,14 +645,16 @@ _CREATE:
 	LDMFD SP!,{R0-R12, R14}
 
 
-
 	@@ Update BLK_HERE and BLK_THERE
 	ldr	r0, =var_BLK_HERE
 	ldr	r1, [r0]
 	add	r1, r1, #BLK_SIZE
 	str	r1, [r0]
 	ldr	r0, =var_HERE
-	str	r1, [r0]	
+	ldr	r2, [r0]
+	cmp	r1, r2		@new BLK_HERE, HERE
+	strge	r1, [r0]
+	
 	ldr	r0, =var_BLK_THERE
 	ldr	r1, [r0]
 	add	r1, r1, #BLK_SIZE
@@ -610,8 +664,15 @@ _CREATE:
 	cmp	r1, r4
 	subge	r1, #THERE_BUF_SIZE
 	str	r1, [r0]
+	
 	ldr	r0, =var_THERE
-	str	r1, [r0]	
+	ldr	r3, =var_BLK_HERE
+	ldr	r3, [r3]
+	ldr	r4, =var_HERE
+	ldr	r4, [r4]
+	cmp	r3, r4
+	strge	r1, [r0]
+	b	1b
 2:	
 	bl	code_EXIT
 
@@ -635,13 +696,15 @@ _CREATE:
 	subge	r2, r2, #THERE_BUF_SIZE
 	cmp	r2, #BLK_SIZE
 	ble	2f
-	ldr	r0, =var_LATEST	@ If the word's defination is cross
-	ldr	r0, [r0]	@ the boundary, may cause problem
-	ldr	r1, =var_BLK_HERE
-	ldr	r1, [r1]
-	add	r1, r1, #BLK_SIZE
-	cmp	r0, r1
-	ble	2f
+	
+	@@ ldr	r0, =var_LATEST	@ If the word's defination is cross
+	@@ ldr	r0, [r0]	@ the boundary, may cause problem
+	@@ ldr	r1, =var_BLK_HERE
+	@@ ldr	r1, [r1]
+	@@ add	r1, r1, #BLK_SIZE
+	@@ cmp	r0, r1
+	@@ ble	2f
+	
 	@@ Prepare the flash
 	STMFD SP!,{R0-R12, R14}
 	ldr	r1, =var_BLK_HERE
@@ -691,6 +754,7 @@ _CREATE:
 	cmp	r1, r4
 	subge	r1, #THERE_BUF_SIZE
 	str	r1, [r0]
+	b	1b
 2:	
 	bl	code_EXIT
 
@@ -747,7 +811,7 @@ _WORD:
 	.set F_HIDDEN,0x20
 	.set F_LENMASK,0x1f
 
-	.set THERE_BUF_SIZE, 2048
+	.set THERE_BUF_SIZE, 4096
 	.set THERE_BUF_END, 0x1C00
 	.set BLK_SIZE, 512
 
@@ -867,6 +931,26 @@ _TCFA:
 	stmnefd	psp!, {top}
 	NEXT
 	
+	defcode "ROT",3,,ROT
+	POP	r0
+	POP	r1
+	PUSH	top
+	mov	top, r0
+	PUSH	r1
+	NEXT
+	
+	defcode "-ROT",4,,NROT
+	POP	r0
+	POP	r1
+	PUSH	r0
+	PUSH	top
+	mov	top, r1
+	NEXT
+	
+	cmp	top, #0
+	stmnefd	psp!, {top}
+	NEXT
+	
 	defcode "0=",2,,ZEQ
 	cmp	top, #0
 	NEXT
@@ -930,7 +1014,7 @@ FALSE_END_LOOP:
 	b	FALSE_END_LOOP
 END_LOOP:
 TRUE_END_LOOP:
-	b	TRUE_END_LOOP
+  	b	TRUE_END_LOOP
 _code_end:	
 
 	.section .rodata

@@ -1,0 +1,128 @@
+: i2c-irq
+    ENTER_CRITICAL
+    SAVE_CONTEXT
+    I2C0STAT @
+    CASE
+	0x08 OF				\ "start" has been xmited
+	    I2CADR C@ I2C0DAT !
+
+	    0x04 I2C0CONSET !		\ set "AA"
+	    0x28 I2C0CONCLR !		\ clr "STA" and "SI"
+	ENDOF
+	0x10 OF
+	    I2CADR C@ I2C0DAT !
+	    0x04 I2C0CONSET !		\ set "AA"
+	    0x28 I2C0CONCLR !		\ clr "STA" and "SI"
+	ENDOF
+	0x18 OF
+	    I2CBUF C@ I2C0DAT !
+	    I2CLEN C@ 0x01 - I2CLEN C!
+	    0x04 I2C0CONSET !		\ set "AA"	    
+	    0x08 I2C0CONCLR !		\ clr "SI"
+	ENDOF
+	0x28 OF
+	    I2CLEN C@ IF
+		I2CLEN C@ DUP
+		I2CBUF + C@ I2C0DAT C!
+		0x01 - I2CLEN C!
+		0x04 I2C0CONSET !		\ set "AA"	    
+		0x08 I2C0CONCLR !		\ clr "SI"
+	    ELSE
+		0x01 I2C_XFER_END !
+		I2C_STO_FLG @
+		IF
+		    0x14 I2C0CONSET !		\ set "AA" and "STO"	    		    
+		    0x08 I2C0CONCLR !		\ clr "SI"
+		ELSE
+		    0x04 I2C0CONSET !		\ set "AA"	    
+		    0x08 I2C0CONCLR !		\ clr "SI"
+		THEN
+	    THEN
+	    0x10 I2C0CONSET !
+	    0x08 I2C0CONCLR !
+	ENDOF
+	0x30 OF
+	    0x14 I2C0CONSET !		\ set "AA" and "STO"	    		    
+	    0x08 I2C0CONCLR !		\ clr "SI"
+	ENDOF
+	0x40 OF
+	    I2CLEN C@ IF
+		0x04 I2C0CONCLR !		\ clr "AA"		
+	    ELSE
+		0x04 I2C0CONSET !		\ set "AA"		
+	    THEN
+	    0x28 I2C0CONCLR !		\ clr "STA" and "SI"	    
+	ENDOF
+	0x50 OF
+	    I2C0DAT C@
+	    I2CLEN C@ I2CBUF + C!
+	    I2CLEN C@ 0x01 ?DUP IF
+		0x01 - I2CLEN C!
+		0x04 I2C0CONSET !		\ set "AA"	    		
+		0x08 I2C0CONCLR !		\ clr "SI"		
+	    ELSE
+		0x14 I2C0CONSET !		\ set "AA" and "STO"	    		    
+		0x0C I2C0CONCLR !		\ clr "SI" and "AA"
+		0x01 I2C_XFER_END !		
+	    THEN
+	ENDOF
+	0x58 OF
+	    I2C0DAT C@
+	    I2CLEN C@ I2CBUF + C!
+	    0x14 I2C0CONSET !		\ set "AA" and "STO"	    		    	    
+	    0x08 I2C0CONCLR !		\ clr "SI"
+	    0x01 I2C_XFER_END !	    
+	ENDOF
+    ENDCASE
+    0xFF VICVectAddr !
+    RESTORE_CONTEXT
+    LEAVE_CRITICAL
+;
+
+
+: init-i2c
+    \ Init Pin
+    PINSEL0 @
+    0x50 OR
+    PINSEL0 !
+    \ Init I2C
+    0x6c I2C0CONCLR !
+    0x40 I2C0CONSET !
+    0x0C I2C0SCLH !
+    0x0D I2C0SCLL !
+    LIT [ ' i2c-irq , ] VICVectAddr9 !
+    0x29 VICVectCntl9 !
+    0x01 0x09 << VICIntEnable !
+;
+
+: i2c-xfer
+    0x0 I2C_STO_FLG !			\ don't send STOP    
+    0x60 I2C0CONSET !
+;
+
+: i2c-xfer-end
+    0xFFFFFFFF I2C_STO_FLG !		\ send STOP    
+    0x60 I2C0CONSET !    
+;
+
+
+: mpu6050-read				  \ (reg addr --)
+    0xD0 I2CADR C!
+    0x01 I2CLEN C!
+    I2CBUF C!
+    0x0 I2C_XFER_END !		    
+    i2c-xfer
+    BEGIN
+	I2C_XFER_END @
+    UNTIL
+    0xD1 I2CADR C!
+    0x01 I2CLEN C!
+    0x0 I2C_XFER_END !		
+    i2c-xfer-end
+    BEGIN
+	I2C_XFER_END @
+    UNTIL
+;
+: mpu6050-write
+;
+

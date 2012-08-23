@@ -194,14 +194,14 @@ PLL_Loop:
 	@@ Init there
 	ldr	r0, =var_THERE
 	mov	r1, #0x40000000
-	mov	r2, #0x00001000
+	mov	r2, #0x00000600
 	add	r1, r1, r2
 	str	r1, [r0]
 	
 	@@ Init blk_there
 	ldr	r0, =var_BLK_THERE
 	mov	r1, #0x40000000
-	mov	r2, #0x00001000
+	mov	r2, #0x00000600
 	add	r1, r1, r2
 	str	r1, [r0]
 
@@ -537,12 +537,29 @@ _CREATE:
 	NEXT
 	
 	defcode "SAVE_CONTEXT",12,,SAVE_CONTEXT
-	stmfd	SP!,{R0-R12, R14}	
+	stmfd	SP!,{R0-R12}
 	NEXT
 	
 	defcode "RESTORE_CONTEXT",15,,RESTORE_CONTEXT
-	LDMFD SP!,{R0-R12, R14}
+	LDMFD SP!,{R0-R12}
 	NEXT
+	
+	defcode "ENTER_INTERRUPT",15,,ENTER_INTERRUPT
+	stmfd	sp!, {r0-r12}
+	mrs	r0, cpsr
+	orr	r0, r0, #0x80
+	msr	cpsr, r0
+	NEXT	
+	
+	defcode "LEAVE_INTERRUPT",15,,LEAVE_INTERRUPT
+	mrs	r0, cpsr
+	bic	r0, r0, #0x80
+	msr	cpsr, r0
+	ldmfd	sp!, {r0-r12}
+	POPRSP	lr
+	subs	pc, lr, #4
+	
+
 	
 	@@
 	defword "END",3,F_IMMED,END
@@ -555,6 +572,9 @@ _CREATE:
 	sub	r2, r0, r1	@ r2 = THERE - BLK_THERE + SIZE
 	cmp	r2, #THERE_BUF_SIZE
 	subge	r2, r2, #THERE_BUF_SIZE
+	cmp	r2, #0x0
+	ble	2f
+	
 	@@ Prepare the flash
 	STMFD SP!,{R0-R12, R14}
 	ldr	r1, =var_BLK_HERE
@@ -611,7 +631,7 @@ _CREATE:
 	subge	r1, #THERE_BUF_SIZE
 	str	r1, [r0]
 	ldr	r0, =var_THERE
-	str	r1, [r0]	
+	str	r1, [r0]
 2:	
 	bl	code_EXIT
 
@@ -691,6 +711,7 @@ _CREATE:
 	cmp	r1, r4
 	subge	r1, #THERE_BUF_SIZE
 	str	r1, [r0]
+	b	1b
 2:	
 	bl	code_EXIT
 
@@ -747,7 +768,7 @@ _WORD:
 	.set F_HIDDEN,0x20
 	.set F_LENMASK,0x1f
 
-	.set THERE_BUF_SIZE, 2048
+	.set THERE_BUF_SIZE, 5632
 	.set THERE_BUF_END, 0x1C00
 	.set BLK_SIZE, 512
 
@@ -757,18 +778,28 @@ _WORD:
 _FIND:
 	
 	ldr	r0, =var_LATEST
+	ldr	r1, [r0]
+	ldr	r1, [r1]
+	cmp	r1, #0xffffffff
+	ldreq	r0, [r0]
+	beq	5f
 1:
 	ldr	r1, [r0]	@ r1 = link
 	cmp	r1, #0		
 	beq	4f
 	cmp	r1, #0xffffffff	@ There's no link, should be in RAM
 	bne	2f
+5:	
 	ldr	r2, =var_BLK_THERE
 	ldr	r2, [r2]
 	ldr	r3, =var_BLK_HERE
 	ldr	r3, [r3]
 	sub	r2, r2, r3	@ r2 = BLK_THERE - BLK_HERE
 	add	r0, r0, r2	@ link = THERE
+	mov	r2, #THERE_BUF_END
+	add	r2, #0x40000000
+	cmp	r0, r2
+	subge	r0, r0, #THERE_BUF_SIZE
 	mov	r1, r0
 2:	
 	ldrb	r3, [r1, #4]
@@ -793,7 +824,7 @@ _FIND:
 	mov	top, #0
 	NEXT
 	
-	defcode ">CFA", 4,, TCFA
+	defword ">CFA", 4,, TCFA
 	bl 	_TCFA
 	bl	code_EXIT
 _TCFA:
@@ -852,8 +883,40 @@ _TCFA:
 	PUSH	top
 	NEXT
 	
+	defcode "?DUP",4,,NZ_DUP
+	cmp	top, #0
+	stmnefd	psp!, {top}
+	NEXT
+	
+	defcode "ROT",3,,ROT
+	POP	r0
+	POP	r1
+	PUSH	top
+	mov	top, r0
+	PUSH	r1
+	NEXT
+	
+	defcode "-ROT",4,,NROT
+	POP	r0
+	POP	r1
+	PUSH	r0
+	PUSH	top
+	mov	top, r1
+	NEXT
+	
+	cmp	top, #0
+	stmnefd	psp!, {top}
+	NEXT
+	
 	defcode "0=",2,,ZEQ
 	cmp	top, #0
+	NEXT
+	
+	defcode "=",1,,EQ
+	POP	r0
+	cmp	r0, top
+	moveq	top, #0xFFFFFFFF
+	movne	top, #0
 	NEXT
 	
 	defword "CONSTANT",8,F_IMMED,CONSTANT
@@ -908,7 +971,7 @@ FALSE_END_LOOP:
 	b	FALSE_END_LOOP
 END_LOOP:
 TRUE_END_LOOP:
-	b	TRUE_END_LOOP
+  	b	TRUE_END_LOOP
 _code_end:	
 
 	.section .rodata

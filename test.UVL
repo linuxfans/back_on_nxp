@@ -1,0 +1,11 @@
+[Signal 1]
+DispName=I2C0DAT
+PlotType=0
+Color=255
+ValHex=0
+MinDec=0
+MinVal=0.
+MaxDec=0
+MaxVal=255.
+Mask=0
+Offset=0

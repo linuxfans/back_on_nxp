@@ -256,7 +256,7 @@ END
 : i2c-set-sta
     0x20 0x08 i2c-set-clr	\ set "AA" and "STO",  clr "SI"
 ;
-
+END
 : i2c-irq-send
     I2CLEN C@ IF
 	i2c-send-data		
@@ -284,18 +284,18 @@ END
 	THEN
     THEN
 
-    DUP
-    0x50 = IF
-    	I2C0DAT C@
-    	I2CLEN C@ I2CBUF + C!
-    	I2CLEN C@ ?DUP IF
-    	    0x01 - I2CLEN C!
-    	    i2c-clr-si	    
-    	ELSE
-    	    0x00 0x0C i2c-set-clr
-    	    i2c-xfer-end		
-    	THEN
-    THEN
+    \ DUP
+    \ 0x50 = IF
+    \ 	I2C0DAT C@
+    \ 	I2CLEN C@ I2CBUF + C!
+    \ 	I2CLEN C@ ?DUP IF
+    \ 	    0x01 - I2CLEN C!
+    \ 	    i2c-clr-si	    
+    \ 	ELSE
+    \ 	    0x00 0x0C i2c-set-clr
+    \ 	    i2c-xfer-end		
+    \ 	THEN
+    \ THEN
     DUP
     0x58 = IF
 	I2C0DAT C@
@@ -376,6 +376,7 @@ END
 ;
 
 
+
 : mpu6050-read				  \ (reg addr --)
     0xD0 I2CADR C!
     0x00 I2CLEN C!
@@ -385,7 +386,6 @@ END
     BEGIN
 	I2C_XFER_END @
     WHILE
-	    0xEF uart-send	    
     REPEAT
     0xEF uart-send
     0xD1 I2CADR C!
@@ -395,10 +395,7 @@ END
     BEGIN
     	I2C_XFER_END @
     WHILE
-	    0x28 uart-send    	    
     REPEAT
-
-    0x28 uart-send    
     BEGIN
 	I2C0CONSET @
 	0x10 AND 
@@ -430,21 +427,14 @@ END
     
     0x1 0x15 << IOSET1 !
     0x1 0x14 << IOCLR1 !
-
-    BEGIN
-	0x01
-    WHILE
-	    0x3b mpu6050-read
-	    I2CBUF C@ uart-send	    
-	    0x3c mpu6050-read
-	    I2CBUF C@ uart-send	    
-    REPEAT
-    
 ;
+END
+
 : main
     init
     main_loop
 ;
 
 END main
+
 
