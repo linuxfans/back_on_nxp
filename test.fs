@@ -2,7 +2,7 @@ VARIABLE myvar1
 
 VARIABLE I2CADR
 VARIABLE I2CLEN
-VARIABLE I2CBUF \ DHERE @ 0x08 + DHERE !	\ Array, size 0x04+0x08
+VARIABLE I2CBUF  DHERE @ 0x08 + DHERE !	\ Array, size 0x04+0x08
 
 VARIABLE I2C_XFER_END
 VARIABLE I2C_STO_FLG
@@ -19,7 +19,7 @@ VARIABLE I2C_STO_FLG
 0xE0028018 CONSTANT IODIR1
 0xE002801C CONSTANT IOCLR1
 
-END
+
 
 0xe000c000 CONSTANT  U0DATA
 0xe000c000 CONSTANT  U0DLL
@@ -35,12 +35,14 @@ END
 
 
 0xfffff010 CONSTANT VICIntEnable
+0xfffff110 CONSTANT VICVectAddr4
+0xfffff210 CONSTANT VICVectCntl4
 0xfffff118 CONSTANT VICVectAddr6
 0xfffff218 CONSTANT VICVectCntl6
 0xfffff124 CONSTANT VICVectAddr9
 0xfffff224 CONSTANT VICVectCntl9
 
-END
+
 
 0xfffff030 CONSTANT VICVectAddr
 0xE001C000 CONSTANT I2C0CONSET
@@ -142,6 +144,7 @@ END
 
 END
 
+
 : CASE IMMEDIATE
     0x0		\ push 0 to mark the bottom of the stack )
 ;
@@ -178,11 +181,9 @@ END
 	    CASE
 		0x04 OF
 		    U0DATA @
-		    myvar1 @ U0DATA !			    
 		ENDOF
 		0x0C OF
 		    U0DATA @
-		    myvar1 @ U0DATA !			    
 		ENDOF
 	    ENDCASE
     REPEAT
@@ -231,9 +232,12 @@ END
     I2CADR C@ I2C0DAT C!
 ;    
 : i2c-send-data
-    I2CLEN C@ + I2CBUF C@ I2C0DAT C!
-    I2CLEN C@ ?DUP IF 0x01 - I2CLEN C! THEN
-;    
+    I2CLEN C@ I2CBUF + C@ I2C0DAT C!
+;
+: i2c-dec-cnt
+    I2CLEN C@ ?DUP IF 0x01 - I2CLEN C! THEN    
+;
+
 : i2c-xfer-end
     0x0 I2C_XFER_END !	        
 ;    
@@ -259,7 +263,8 @@ END
 
 : i2c-irq-send
     I2CLEN C@ IF
-	i2c-send-data		
+	i2c-dec-cnt
+	i2c-send-data
 	i2c-clr-si
     ELSE
 	i2c-xfer-end		
@@ -267,77 +272,75 @@ END
 	IF
 	    i2c-set-sto		    
 	ELSE
-	    i2c-set-sta
+	    i2c-clr-si
 	THEN
     THEN
 ;
 
 : i2c-irq
     ENTER_INTERRUPT    
-    I2C0STAT @ 
-    DUP
-    0x40 = IF
-	I2CLEN C@ IF
-	    i2c-clr-si
-	ELSE
-	    0x00 0x2C i2c-set-clr	    
-	THEN
-    THEN
+    I2C0STAT @
+    CASE
+	0x40 OF
+	    I2CLEN C@ IF
+		i2c-clr-si
+	    ELSE
+		0x00 0x2C i2c-set-clr	    
+	    THEN
+	ENDOF
+	0x50 OF
+	    I2C0DAT C@
+	    I2CLEN C@ I2CBUF + C!
+	    I2CLEN C@ ?DUP IF
+		0x01 - I2CLEN C!
+		i2c-clr-si	    
+	    ELSE
+		0x00 0x0C i2c-set-clr
+		i2c-xfer-end		
+	    THEN
+	ENDOF
+	0x58 OF
+	    I2C0DAT C@
+	    I2CLEN C@ I2CBUF + C!
+	    i2c-set-sto
+	    i2c-xfer-end
+	ENDOF
+	
+	0x08 OF
+	    i2c-send-addr
+	    i2c-clr-sta	    
+	ENDOF
+	
+	0x10 OF
+	    i2c-send-addr
+	    i2c-clr-sta	    
+	ENDOF
+	
+	0x18 OF
+	    i2c-send-data
+	    i2c-clr-si	    
+	ENDOF
+	
+	0x20 OF
+	    i2c-set-sto	    
+	    i2c-xfer-end
+	ENDOF
+	
+	0x28 OF
+	    i2c-irq-send
+	ENDOF
+	
+	0x30 OF
+	    i2c-set-sto		    	    
+	    i2c-xfer-end		
+	ENDOF
+	
+	0x48 OF
+	    i2c-set-sto
+	    i2c-xfer-end		
+	ENDOF
+    ENDCASE
 
-    DUP
-    0x50 = IF
-    	I2C0DAT C@
-    	I2CLEN C@ I2CBUF + C!
-    	I2CLEN C@ ?DUP IF
-    	    0x01 - I2CLEN C!
-    	    i2c-clr-si	    
-    	ELSE
-    	    0x00 0x0C i2c-set-clr
-    	    i2c-xfer-end		
-    	THEN
-    THEN
-    DUP
-    0x58 = IF
-	I2C0DAT C@
-	I2CLEN C@ I2CBUF + C!
-	i2c-set-sto
-	i2c-xfer-end
-    THEN
-    DUP
-    0x08 = IF
-	i2c-send-addr
-	i2c-clr-sta	    
-    THEN
-    DUP
-    0x10 = IF
-	i2c-send-addr
-	i2c-clr-sta	    
-    THEN
-    DUP
-    0x18 = IF
-	i2c-send-data
-	i2c-clr-si	    
-    THEN
-    DUP
-    0x20 = IF
-    	i2c-set-sto	    
-    	i2c-xfer-end
-    THEN
-    DUP
-    0x28 = IF
-	i2c-irq-send
-    THEN
-    DUP
-    0x30 = IF
-    	i2c-set-sto		    	    
-    	i2c-xfer-end		
-    THEN
-    DUP
-    0x48 = IF
-	i2c-set-sto
-	i2c-xfer-end		
-    THEN
-    DROP
     0xFF VICVectAddr !
     LEAVE_INTERRUPT
 ;
@@ -385,9 +388,7 @@ END
     BEGIN
 	I2C_XFER_END @
     WHILE
-	    0xEF uart-send	    
     REPEAT
-    0xEF uart-send
     0xD1 I2CADR C!
     0x00 I2CLEN C!
     0xFFFFFFFF I2C_XFER_END !		
@@ -395,23 +396,146 @@ END
     BEGIN
     	I2C_XFER_END @
     WHILE
-	    0x28 uart-send    	    
     REPEAT
 
-    0x28 uart-send    
     BEGIN
 	I2C0CONSET @
 	0x10 AND 
     WHILE
     REPEAT
-    0x22 uart-send
 ;
+
+END
+
+: mpu6050-write				  \ (reg addr --)
+    0xD0 I2CADR C!
+    0x01 I2CLEN C!
+    I2CBUF 0x01 + C!
+    I2CBUF C!
+    0xFFFFFFFF I2C_XFER_END !		    
+    i2c-xfer-withend
+    BEGIN
+	I2C_XFER_END @
+    WHILE
+    REPEAT
+    BEGIN
+	I2C0CONSET @
+	0x10 AND 
+    WHILE
+    REPEAT
+;
+
+
+0x14 CONSTANT MCR
+0x18 CONSTANT MR0
+0x1C CONSTANT MR1
+0x20 CONSTANT MR2
+0x24 CONSTANT MR3
+0x217A7 CONSTANT CYC
+
+: timer-irq
+    DUP
+    @
+    SWAP
+    OVER 0x01 AND IF
+	DUP MR0 + @
+	CYC = IF
+	    0x35D9 OVER MR0 + !
+	    DUP MCR + @
+	    0x02 BNOT AND
+	    OVER MCR + !
+	ELSE
+	    CYC OVER MR0 + !
+	    DUP MCR + @
+	    0x02 OR
+	    OVER MCR + !
+	THEN
+    THEN
+    OVER 0x02 AND IF
+	DUP MR1 + @
+	CYC = IF
+	    0x35D9 OVER MR1 + !
+	    DUP MCR + @
+	    0x10 BNOT AND
+	    OVER MCR + !
+	ELSE
+	    CYC OVER MR1 + !
+	    DUP MCR + @
+	    0x10 OR
+	    OVER MCR + !
+	THEN
+    THEN
+    OVER 0x04 AND IF
+	DUP MR2 + @
+	CYC = IF
+	    0x35D9 OVER MR2 + !
+	    DUP MCR + @
+	    0x80 BNOT AND
+	    OVER MCR + !
+	ELSE
+	    CYC OVER MR2 + !
+	    DUP MCR + @
+	    0x80 OR
+	    OVER MCR + !
+	THEN
+    THEN
+    OVER 0x08 AND IF
+	DUP MR3 + @
+	CYC = IF
+	    0x35D9 OVER MR3 + !
+	    DUP MCR + @
+	    0x400 BNOT AND
+	    OVER MCR + !
+	ELSE
+	    CYC OVER MR3 + !
+	    DUP MCR + @
+	    0x400 OR
+	    OVER MCR + !
+	THEN
+    THEN
+    !				\ Clear the interrupt
+    0xFF VICVectAddr !    
+;
+
+: timer0-irq
+    ENTER_INTERRUPT
+    0xe0004000
+    timer-irq
+    LEAVE_INTERRUPT
+;    
+    
+;
+: timer1-irq
+    ENTER_INTERRUPT    
+    0xe0008000
+    timer-irq
+    LEAVE_INTERRUPT    
+;
+: init-servo
+    
+    0x6db 0xe0004000 MCR + !
+    0xfff0 0xe000403c !
+    CYC 0xe0004000 MR0 + !
+    CYC 0xe0004000 MR1 + !
+    CYC 0xe0004000 MR2 + !
+    CYC 0xe0004000 MR3 + !
+    LIT [ ' timer0-irq , ] VICVectAddr4 !
+    0x24 VICVectCntl4 !
+    0x01 0x04 << VICIntEnable !
+    0x02 0xe0004004 !
+    0x01 0xe0004004 !
+    
+;
+
+
 : init
     init-led
     init-uart0
     init-i2c
+    init-servo    
     LEAVE_CRITICAL
 ;
+
 
 : main_loop
     \ 0x0
@@ -424,20 +548,32 @@ END
     \ ENDCASE
     I2CBUF C@ uart-send
     0x75 mpu6050-read
-    0x11 uart-send
     I2CBUF C@ uart-send
     0x99 uart-send
+
+    0x00 0x6b mpu6050-write
     
     0x1 0x15 << IOSET1 !
     0x1 0x14 << IOCLR1 !
 
+    0x00 myvar1 !
+    
     BEGIN
-	0x01
+    	0x01
     WHILE
-	    0x3b mpu6050-read
-	    I2CBUF C@ uart-send	    
-	    0x3c mpu6050-read
-	    I2CBUF C@ uart-send	    
+    	    0xea uart-send	    	    
+    	    0x3b mpu6050-read
+    	    I2CBUF C@ uart-send	    
+    	    0x3c mpu6050-read
+	    I2CBUF C@ uart-send
+
+	    myvar1 @ IF
+		0x00 myvar1 !
+		0x1 0x15 << IOSET1 !		
+	    ELSE
+		0x01 myvar1 !
+		0x1 0x15 << IOCLR1 !		
+	    THEN
     REPEAT
     
 ;

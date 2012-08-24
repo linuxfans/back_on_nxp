@@ -256,7 +256,7 @@ END
 : i2c-set-sta
     0x20 0x08 i2c-set-clr	\ set "AA" and "STO",  clr "SI"
 ;
-END
+
 : i2c-irq-send
     I2CLEN C@ IF
 	i2c-send-data		
@@ -274,70 +274,71 @@ END
 
 : i2c-irq
     ENTER_INTERRUPT    
-    I2C0STAT @ 
-    DUP
-    0x40 = IF
-	I2CLEN C@ IF
-	    i2c-clr-si
-	ELSE
-	    0x00 0x2C i2c-set-clr	    
-	THEN
-    THEN
+    I2C0STAT @
 
-    \ DUP
-    \ 0x50 = IF
-    \ 	I2C0DAT C@
-    \ 	I2CLEN C@ I2CBUF + C!
-    \ 	I2CLEN C@ ?DUP IF
-    \ 	    0x01 - I2CLEN C!
-    \ 	    i2c-clr-si	    
-    \ 	ELSE
-    \ 	    0x00 0x0C i2c-set-clr
-    \ 	    i2c-xfer-end		
-    \ 	THEN
-    \ THEN
-    DUP
-    0x58 = IF
-	I2C0DAT C@
-	I2CLEN C@ I2CBUF + C!
-	i2c-set-sto
-	i2c-xfer-end
-    THEN
-    DUP
-    0x08 = IF
-	i2c-send-addr
-	i2c-clr-sta	    
-    THEN
-    DUP
-    0x10 = IF
-	i2c-send-addr
-	i2c-clr-sta	    
-    THEN
-    DUP
-    0x18 = IF
-	i2c-send-data
-	i2c-clr-si	    
-    THEN
-    DUP
-    0x20 = IF
-    	i2c-set-sto	    
-    	i2c-xfer-end
-    THEN
-    DUP
-    0x28 = IF
-	i2c-irq-send
-    THEN
-    DUP
-    0x30 = IF
-    	i2c-set-sto		    	    
-    	i2c-xfer-end		
-    THEN
-    DUP
-    0x48 = IF
-	i2c-set-sto
-	i2c-xfer-end		
-    THEN
-    DROP
+    CASE
+	0x40 OF
+	    I2CLEN C@ IF
+		i2c-clr-si
+	    ELSE
+		0x00 0x2C i2c-set-clr	    
+	    THEN
+	ENDOF
+
+	0x50 OF
+	    I2C0DAT C@
+	    I2CLEN C@ I2CBUF + C!
+	    I2CLEN C@ ?DUP IF
+		0x01 - I2CLEN C!
+		i2c-clr-si	    
+	    ELSE
+		0x00 0x0C i2c-set-clr
+		i2c-xfer-end		
+	    THEN
+	ENDOF
+	
+	0x58 OF
+	    I2C0DAT C@
+	    I2CLEN C@ I2CBUF + C!
+	    i2c-set-sto
+	    i2c-xfer-end
+	ENDOF
+	
+	0x08 OF
+	    i2c-send-addr
+	    i2c-clr-sta	    
+	ENDOF
+	
+	0x10 OF
+	    i2c-send-addr
+	    i2c-clr-sta	    
+	ENDOF
+	
+	0x18 OF
+	    i2c-send-data
+	    i2c-clr-si	    
+	ENDOF
+	
+	0x20 OF
+	    i2c-set-sto	    
+	    i2c-xfer-end
+	ENDOF
+	
+	0x28 OF
+	    i2c-irq-send
+	ENDOF
+	
+	0x30 OF
+	    i2c-set-sto		    	    
+	    i2c-xfer-end		
+	ENDOF
+	
+	0x48 OF
+	    i2c-set-sto
+	    i2c-xfer-end		
+	ENDOF
+    ENDCASE
+
     0xFF VICVectAddr !
     LEAVE_INTERRUPT
 ;
@@ -375,7 +376,6 @@ END
     0x20 I2C0CONSET !    
 ;
 
-END
 
 : mpu6050-read				  \ (reg addr --)
     0xD0 I2CADR C!
