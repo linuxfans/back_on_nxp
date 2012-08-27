@@ -542,6 +542,11 @@ _CREATE:
 	moveq	top, #0xFFFFFFFF
 	movne	top, #0
 	NEXT
+
+	defcode "BNOT",4,,BNOT
+	mvn	top, top
+	NEXT
+
 	
 	@@ 
 	defcode ">>",2,,ASR

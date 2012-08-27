@@ -454,7 +454,7 @@ END
     OVER 0x02 AND IF
 	DUP MR1 + @
 	CYC = IF
-	    0x35D9 OVER MR1 + !
+	    0x35D2 OVER MR1 + !
 	    DUP MCR + @
 	    0x10 BNOT AND
 	    OVER MCR + !
@@ -468,7 +468,7 @@ END
     OVER 0x04 AND IF
 	DUP MR2 + @
 	CYC = IF
-	    0x35D9 OVER MR2 + !
+	    0x35D3 OVER MR2 + !
 	    DUP MCR + @
 	    0x80 BNOT AND
 	    OVER MCR + !
@@ -482,7 +482,7 @@ END
     OVER 0x08 AND IF
 	DUP MR3 + @
 	CYC = IF
-	    0x35D9 OVER MR3 + !
+	    0x35D4 OVER MR3 + !
 	    DUP MCR + @
 	    0x400 BNOT AND
 	    OVER MCR + !
@@ -524,6 +524,7 @@ END
     0x01 0x04 << VICIntEnable !
     0x02 0xe0004004 !
     0x01 0xe0004004 !
+    0x0FC03000 PINSEL1 !
     
 ;
 
