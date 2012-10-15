@@ -10,7 +10,7 @@
         .equ    PLLCFG_PSEL,    (0x03<<5)   /* PLL Divider */
         .equ    PLLSTAT_PLOCK,  (1<<10)     /* PLL Lock Status */
         .equ    PLL_SETUP,      1
-        .equ    PLLCFG_Val,     0x00000022
+        .equ    PLLCFG_Val,     0x00000024
 
 
 

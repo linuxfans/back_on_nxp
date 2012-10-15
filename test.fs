@@ -37,6 +37,8 @@ VARIABLE I2C_STO_FLG
 0xfffff010 CONSTANT VICIntEnable
 0xfffff110 CONSTANT VICVectAddr4
 0xfffff210 CONSTANT VICVectCntl4
+0xfffff114 CONSTANT VICVectAddr5
+0xfffff214 CONSTANT VICVectCntl5
 0xfffff118 CONSTANT VICVectAddr6
 0xfffff218 CONSTANT VICVectCntl6
 0xfffff124 CONSTANT VICVectAddr9
@@ -200,8 +202,8 @@ END
     \ Init Uart0
     0x00 U0IER !	\ Disable uart0 irq
     0x83 U0LCR !	\ 8bits, 1 stop, no parity
-    0x5a U0DLL !	\ 9600bps, 18.384MHz * 3 / 4 / (16 * BAUD)
-    0x00 U0DLM !	\ 9600bps, 18.384MHz * 3 / 4 / (16 * BAUD)    
+    0x62 U0DLL !	\ 9600bps, 12MHz * 5 / 4 / (16 * BAUD)
+    0x00 U0DLM !	\ 9600bps, 12MHz * 5 / 4 / (16 * BAUD)    
     0x03 U0LCR !	\ Latch DLL
     0x01 U0FCR !
     LIT [ ' uart0-irq , ] VICVectAddr6 !
@@ -431,7 +433,7 @@ END
 0x1C CONSTANT MR1
 0x20 CONSTANT MR2
 0x24 CONSTANT MR3
-0x217A7 CONSTANT CYC
+0x493e0 CONSTANT CYC
 
 : timer-irq
     DUP
@@ -515,16 +517,34 @@ END
     
     0x6db 0xe0004000 MCR + !
     0xfff0 0xe000403c !
-    CYC 0xe0004000 MR0 + !
-    CYC 0xe0004000 MR1 + !
-    CYC 0xe0004000 MR2 + !
-    CYC 0xe0004000 MR3 + !
+    CYC 0xe0004000
+    OVER OVER MR0 + !
+    OVER OVER MR1 + !
+    OVER OVER MR2 + !
+    MR3 + !
     LIT [ ' timer0-irq , ] VICVectAddr4 !
     0x24 VICVectCntl4 !
     0x01 0x04 << VICIntEnable !
+    
+    0x6db 0xe0008000 MCR + !
+    0xfff0 0xe000803c !
+    CYC 0xe0008000
+    OVER OVER MR0 + !
+    OVER OVER MR1 + !
+    OVER OVER MR2 + !
+    MR3 + !
+    LIT [ ' timer1-irq , ] VICVectAddr5 !
+    0x25 VICVectCntl5 !
+    0x01 0x05 << VICIntEnable !
+
     0x02 0xe0004004 !
+    0x02 0xe0008004 !
     0x01 0xe0004004 !
-    0x0FC03000 PINSEL1 !
+    0x01 0xe0008004 !
+    0x0FC0303C PINSEL1 !
+    PINSEL0 @
+    0x0A000000 OR
+    PINSEL0 !
     
 ;
 

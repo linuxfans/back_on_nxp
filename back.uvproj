@@ -12,13 +12,13 @@
       <ToolsetName>ARM-GNU</ToolsetName>
       <TargetOption>
         <TargetCommonOption>
-          <Device>LPC2132/01</Device>
+          <Device>LPC2132</Device>
           <Vendor>NXP (founded by Philips)</Vendor>
           <Cpu>IRAM(0x40000000-0x40003FFF) IROM(0-0xFFFF) CLOCK(12000000) CPUTYPE(ARM7TDMI)</Cpu>
           <FlashUtilSpec>LPC210x_ISP.EXE ("#H" ^X $D COM1: 38400 1)</FlashUtilSpec>
           <StartupFile>"STARTUP\Philips\Startup.s" ("Philips LPC2100 Startup Code")</StartupFile>
           <FlashDriverDll>UL2ARM(-U268761108 -O7 -C0 -FO15 -FD40000000 -FC800 -FN1 -FF0LPC_IAP2_64 -FS00 -FL010000)</FlashDriverDll>
-          <DeviceId>4362</DeviceId>
+          <DeviceId>3731</DeviceId>
           <RegisterFile>LPC213X.H</RegisterFile>
           <MemoryEnv></MemoryEnv>
           <Cmp></Cmp>
@@ -102,11 +102,11 @@
           <SimDllName>SARM.DLL</SimDllName>
           <SimDllArguments>-cLPC2100</SimDllArguments>
           <SimDlgDll>DARMP.DLL</SimDlgDll>
-          <SimDlgDllArguments>-pLPC2132/01</SimDlgDllArguments>
+          <SimDlgDllArguments>-pLPC2132</SimDlgDllArguments>
           <TargetDllName>SARM.DLL</TargetDllName>
           <TargetDllArguments></TargetDllArguments>
           <TargetDlgDll>TARMP.DLL</TargetDlgDll>
-          <TargetDlgDllArguments>-pLPC2132/01</TargetDlgDllArguments>
+          <TargetDlgDllArguments>-pLPC2132</TargetDlgDllArguments>
         </DllOption>
         <DebugOption>
           <OPTHX>

@@ -583,15 +583,9 @@ _CREATE:
 	
 	defcode "ENTER_INTERRUPT",15,,ENTER_INTERRUPT
 	stmfd	sp!, {r0-r12}
-	mrs	r0, cpsr
-	orr	r0, r0, #0x80
-	msr	cpsr, r0
 	NEXT	
 	
 	defcode "LEAVE_INTERRUPT",15,,LEAVE_INTERRUPT
-	mrs	r0, cpsr
-	bic	r0, r0, #0x80
-	msr	cpsr, r0
 	ldmfd	sp!, {r0-r12}
 	POPRSP	lr
 	subs	pc, lr, #4
